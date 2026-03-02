@@ -22,30 +22,41 @@
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
   :root {
-    --bg-deep: #0a0a0f;
-    --bg-surface: #12121a;
-    --bg-elevated: #1a1a26;
-    --bg-code: #0d0d14;
-    --border-dim: #1e1e2e;
-    --border-glow: #2a2a40;
-    --text-primary: #c8c8d8;
-    --text-secondary: #7a7a90;
-    --text-dim: #4a4a5c;
+    --bg-deep: #24062B;
+    --bg-deep-dark: #140318;
+    --bg-surface: #2e0a38;
+    --bg-elevated: #3a1045;
+    --bg-code: #1a0420;
+    --border-dim: #3d1248;
+    --border-glow: #4e1a5c;
+    --text-primary: #dcd0e0;
+    --text-secondary: #9a86a0;
+    --text-dim: #6a4e72;
     --accent-cyan: #00d4ff;
     --accent-green: #00ff88;
     --accent-amber: #ffaa00;
     --accent-red: #ff4466;
-    --accent-purple: #aa66ff;
+    --accent-purple: #cc88ff;
     --accent-blue: #4488ff;
     --glow-cyan: rgba(0, 212, 255, 0.08);
     --glow-green: rgba(0, 255, 136, 0.06);
     --glow-amber: rgba(255, 170, 0, 0.06);
+    --glow-purple: rgba(123, 31, 162, 0.15);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     background: var(--bg-deep);
+    background: linear-gradient(
+      180deg,
+      var(--bg-deep-dark) 0%,
+      var(--bg-deep) 15%,
+      #2d0835 40%,
+      var(--bg-deep) 70%,
+      var(--bg-deep-dark) 100%
+    );
+    background-attachment: fixed;
     color: var(--text-primary);
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -107,7 +118,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-green));
+    background: linear-gradient(90deg, #FFDF00, #FF5400, #7B1FA2, #0000FF, #008000);
   }
 
   .header-badge {
@@ -126,7 +137,7 @@
     width: 120px;
     height: 120px;
     margin-bottom: 16px;
-    filter: drop-shadow(0 0 20px rgba(123, 31, 162, 0.3));
+    filter: drop-shadow(0 0 24px rgba(123, 31, 162, 0.5)) drop-shadow(0 0 60px rgba(123, 31, 162, 0.2));
   }
 
   .header h1 {
@@ -162,8 +173,8 @@
 
   /* === AUDIENCE BANNER === */
   .audience-banner {
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.04), rgba(170, 102, 255, 0.04));
+    border: 1px solid rgba(204, 136, 255, 0.25);
+    background: linear-gradient(135deg, rgba(123, 31, 162, 0.12), rgba(0, 212, 255, 0.04));
     padding: 20px 28px;
     margin-bottom: 32px;
     font-size: 12px;
@@ -517,12 +528,12 @@
   }
 
   /* === ACCENT COLORS FOR SECTION TYPES === */
-  section[data-type="identity"] .section-header { border-left: 3px solid var(--accent-cyan); }
-  section[data-type="capability"] .section-header { border-left: 3px solid var(--accent-green); }
-  section[data-type="framework"] .section-header { border-left: 3px solid var(--accent-purple); }
-  section[data-type="protocol"] .section-header { border-left: 3px solid var(--accent-amber); }
-  section[data-type="security"] .section-header { border-left: 3px solid var(--accent-red); }
-  section[data-type="operational"] .section-header { border-left: 3px solid var(--accent-blue); }
+  section[data-type="identity"] .section-header { border-left: 3px solid #cc88ff; }
+  section[data-type="capability"] .section-header { border-left: 3px solid #00ff88; }
+  section[data-type="framework"] .section-header { border-left: 3px solid #FFDF00; }
+  section[data-type="protocol"] .section-header { border-left: 3px solid #FF5400; }
+  section[data-type="security"] .section-header { border-left: 3px solid #ff4466; }
+  section[data-type="operational"] .section-header { border-left: 3px solid #0088ff; }
 
   /* === DOWNLOAD PANEL === */
   .download-panel {
