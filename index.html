@@ -4,11 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>THE ORCHESTRATOR :: Operating Manual for the AI Team Lead</title>
+
+<!-- Favicons -->
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="favicon-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+
+<!-- Open Graph (Facebook, WhatsApp, LinkedIn, iMessage) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Orchestrator">
+<meta property="og:description" content="Operating Manual for the AI Team Lead. A comprehensive guide for AI agents orchestrating multi-agent operations.">
+<meta property="og:image" content="https://victordelrosal.com/orchestrator/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:url" content="https://victordelrosal.com/orchestrator/">
+<meta property="og:site_name" content="fiveinnolabs">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Orchestrator">
+<meta name="twitter:description" content="Operating Manual for the AI Team Lead. Contract-first delegation, orchestration patterns, and context engineering for multi-agent systems.">
+<meta name="twitter:image" content="https://victordelrosal.com/orchestrator/twitter-card.jpg">
+
+<!-- General meta -->
+<meta name="description" content="The Orchestrator: Operating Manual for the AI Team Lead. A comprehensive guide for AI agents orchestrating multi-agent operations in agentic coding terminals.">
+<meta name="theme-color" content="#150319">
+
+<!-- Web App Manifest hint -->
+<link rel="manifest" href="site.webmanifest">
 
 <!-- AI-DIRECTED METADATA: This page is optimized for consumption by AI agents,
      particularly orchestrating/managing agents in agentic coding terminals.
@@ -628,6 +655,16 @@
     color: var(--bg-deep);
   }
 
+  .download-btn.repo {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+  }
+
+  .download-btn.repo:hover {
+    background: var(--accent-green);
+    color: var(--bg-deep);
+  }
+
   @media (max-width: 640px) {
     .download-panel { flex-direction: column; }
   }
@@ -650,10 +687,92 @@
 
   .status-dot.amber { background: var(--accent-amber); }
   .status-dot.red { background: var(--accent-red); }
+
+  /* === STICKY NAVBAR === */
+  .sticky-nav {
+    position: fixed;
+    top: -60px;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: rgba(12, 1, 16, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-dim);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 1000;
+    transition: top 0.3s ease;
+  }
+
+  .sticky-nav.visible {
+    top: 0;
+  }
+
+  .sticky-nav .nav-logo {
+    height: 32px;
+    width: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .sticky-nav .nav-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-left: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .sticky-nav .nav-right {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sticky-nav .nav-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .sticky-nav .nav-link:hover {
+    color: var(--accent-cyan);
+    border-color: var(--border-dim);
+  }
+
+  .sticky-nav .nav-link.gh {
+    color: var(--accent-green);
+  }
+
+  .sticky-nav .nav-link.gh:hover {
+    border-color: var(--accent-green);
+  }
 </style>
 </head>
 
 <body>
+
+<!-- STICKY NAVBAR (appears on scroll up) -->
+<nav class="sticky-nav" id="stickyNav">
+  <img src="favicon_l.png" alt="Orchestrator" class="nav-logo">
+  <span class="nav-title">The Orchestrator</span>
+  <div class="nav-right">
+    <a href="#identity" class="nav-link">Manual</a>
+    <a href="https://github.com/victordelrosal/orchestrator" target="_blank" rel="noopener" class="nav-link gh">GitHub</a>
+  </div>
+</nav>
+
 <div class="page-wrapper">
 
 <!-- ============================================================
@@ -720,6 +839,12 @@
     <div class="card-title">THE-ORCHESTRATOR-GENERIC.md</div>
     <div class="card-desc">Platform-agnostic. Works with Codex CLI, opencode, Gemini CLI, Aider, Cursor Agent, Windsurf, or any agentic coding terminal with tool use and filesystem access.</div>
     <a href="THE-ORCHESTRATOR-GENERIC.md" download class="download-btn alt"><span class="arrow">&darr;</span> Download .md</a>
+  </div>
+  <div class="download-card">
+    <span class="card-label">Source Repository</span>
+    <div class="card-title">GitHub</div>
+    <div class="card-desc">Clone, fork, or star the repo. Includes both editions, this page, and all assets. Contributions welcome.</div>
+    <a href="https://github.com/victordelrosal/orchestrator" target="_blank" rel="noopener" class="download-btn repo"><span class="arrow">&#x2197;</span> View on GitHub</a>
   </div>
 </div>
 
@@ -1490,5 +1615,23 @@ Write all files to: [ABSOLUTE PATH]
 }
 </script>
 
+<script>
+(function() {
+  var nav = document.getElementById('stickyNav');
+  var lastScroll = 0;
+  var threshold = 80;
+  window.addEventListener('scroll', function() {
+    var current = window.pageYOffset || document.documentElement.scrollTop;
+    if (current < threshold) {
+      nav.classList.remove('visible');
+    } else if (current < lastScroll) {
+      nav.classList.add('visible');
+    } else {
+      nav.classList.remove('visible');
+    }
+    lastScroll = current;
+  });
+})();
+</script>
 </body>
 </html>
