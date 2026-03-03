@@ -172,6 +172,21 @@
     display: block;
     object-fit: contain;
   }
+  /* CRT scanlines over the PNG logo */
+  .hero-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0, 0, 0, 0.12) 3px,
+      rgba(0, 0, 0, 0.12) 5px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
   .hero-ascii-wrap {
     z-index: 1;
     background: var(--bg-deep);
@@ -179,12 +194,25 @@
 
   /* Hero wipe transitions */
   @keyframes wipe-right { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes wipe-left { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
   @keyframes wipe-down { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
   @keyframes wipe-up { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
   @keyframes starwars { from { clip-path: polygon(0 0, 0 0, -15% 100%, -15% 100%); } to { clip-path: polygon(0 0, 115% 0, 100% 100%, -15% 100%); } }
   @keyframes starwars-rev { from { clip-path: polygon(100% 0, 100% 0, 115% 100%, 115% 100%); } to { clip-path: polygon(-15% 0, 100% 0, 115% 100%, 0 100%); } }
   @keyframes iris { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
   @keyframes diamond { from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); } to { clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%); } }
+  @keyframes clock {
+    0%   { clip-path: polygon(50% 50%, 50% 0%, 50% 0%,   50% 0%,   50% 0%,   50% 0%,   50% 0%,   50% 0%,   50% 0%,   50% 0%); }
+    11%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 0%,  100% 0%,  100% 0%,  100% 0%,  100% 0%,  100% 0%,  100% 0%); }
+    22%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 50%, 100% 50%, 100% 50%, 100% 50%, 100% 50%, 100% 50%); }
+    33%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%); }
+    44%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  50% 100%,  50% 100%,  50% 100%,  50% 100%); }
+    55%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  0% 100%,   0% 100%,   0% 100%,   0% 100%); }
+    66%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  0% 100%,   0% 50%,    0% 50%,    0% 50%); }
+    77%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  0% 100%,   0% 50%,    0% 0%,     0% 0%); }
+    88%  { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  0% 100%,   0% 50%,    0% 0%,     50% 0%); }
+    100% { clip-path: polygon(50% 50%, 50% 0%, 100% 0%,  100% 50%, 100% 100%, 50% 100%,  0% 100%,   0% 50%,    0% 0%,     50% 0%); }
+  }
 
   .hero-ascii {
     font-family: 'JetBrains Mono', monospace;
@@ -1056,10 +1084,12 @@ function showTab(id) {
   var banner = document.querySelector('.hero-banner');
   var ascii = document.querySelector('.hero-ascii-wrap');
   var effects = [
-    { anim: 'wipe-right', clip: 'inset(0 100% 0 0)', ms: 1200 },
-    { anim: 'wipe-down',  clip: 'inset(0 0 100% 0)',  ms: 1200 },
+    { anim: 'wipe-right',   clip: 'inset(0 100% 0 0)', ms: 1200 },
+    { anim: 'wipe-down',    clip: 'inset(0 0 100% 0)', ms: 1200 },
     { anim: 'starwars',     clip: 'polygon(0 0, 0 0, -15% 100%, -15% 100%)', ms: 1500 },
     { anim: 'iris',         clip: 'circle(0% at 50% 50%)', ms: 1200 },
+    { anim: 'wipe-left',    clip: 'inset(0 0 0 100%)', ms: 1200 },
+    { anim: 'clock',        clip: 'polygon(50% 50%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%)', ms: 1800 },
     { anim: 'diamond',      clip: 'polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)', ms: 1200 },
     { anim: 'wipe-up',      clip: 'inset(100% 0 0 0)', ms: 1200 },
     { anim: 'starwars-rev', clip: 'polygon(100% 0, 100% 0, 115% 100%, 115% 100%)', ms: 1500 }
