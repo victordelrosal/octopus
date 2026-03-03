@@ -161,11 +161,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 1s ease-in-out;
   }
   .hero-banner {
     background: var(--bg-deep);
-    opacity: 1;
+    z-index: 2;
   }
   .hero-banner img {
     height: 100%;
@@ -174,10 +173,16 @@
     object-fit: contain;
   }
   .hero-ascii-wrap {
-    opacity: 0;
+    z-index: 1;
   }
-  .hero-crossfade.show-ascii .hero-banner { opacity: 0; }
-  .hero-crossfade.show-ascii .hero-ascii-wrap { opacity: 1; }
+
+  /* Hero wipe transitions */
+  @keyframes wipe-right { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes wipe-down { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes wipe-up { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes starwars { from { clip-path: polygon(0 0, 0 0, -15% 100%, -15% 100%); } to { clip-path: polygon(0 0, 115% 0, 100% 100%, -15% 100%); } }
+  @keyframes iris { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
+  @keyframes diamond { from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); } to { clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%); } }
 
   .hero-ascii {
     font-family: 'JetBrains Mono', monospace;
@@ -1044,10 +1049,34 @@ function showTab(id) {
   document.getElementById('tab-' + id).classList.add('active');
 }
 
-// Hero crossfade: alternate between PNG and ASCII art every 3s
-setInterval(() => {
-  document.getElementById('heroCrossfade').classList.toggle('show-ascii');
-}, 3000);
+// Hero wipe transitions: cycle through effects
+(function() {
+  var banner = document.querySelector('.hero-banner');
+  var ascii = document.querySelector('.hero-ascii-wrap');
+  var effects = [
+    { anim: 'wipe-right', clip: 'inset(0 100% 0 0)', ms: 1200 },
+    { anim: 'wipe-down',  clip: 'inset(0 0 100% 0)',  ms: 1200 },
+    { anim: 'starwars',   clip: 'polygon(0 0, 0 0, -15% 100%, -15% 100%)', ms: 1500 },
+    { anim: 'iris',       clip: 'circle(0% at 50% 50%)', ms: 1200 },
+    { anim: 'diamond',    clip: 'polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)', ms: 1200 },
+    { anim: 'wipe-up',    clip: 'inset(100% 0 0 0)', ms: 1200 }
+  ];
+  var showing = false, idx = 0;
+  setInterval(function() {
+    var e = effects[idx % effects.length];
+    showing = !showing;
+    var inc = showing ? ascii : banner;
+    var out = showing ? banner : ascii;
+    inc.style.animation = 'none';
+    inc.style.clipPath = e.clip;
+    inc.style.zIndex = 2;
+    out.style.zIndex = 1;
+    inc.offsetHeight;
+    inc.style.clipPath = '';
+    inc.style.animation = e.anim + ' ' + e.ms + 'ms ease-in-out forwards';
+    idx++;
+  }, 4000);
+})();
 
 function copyCmd(btn) {
   const code = btn.parentElement.querySelector('.qs-code').textContent.trim();
