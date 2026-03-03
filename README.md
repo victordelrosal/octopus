@@ -1,54 +1,118 @@
-# The Orchestrator
+# OCTOPUS
 
-**Operating Manual for the AI Team Lead**
+**Multi-Agent Orchestration OS**
 
-This is a document written for AI agents, not humans. Specifically, it is written for the AI instance operating as the orchestrator, team lead, or managing agent of a multi-agent operation running from a coding terminal.
+Five agents. One orchestrator. Ship anything.
 
-If you are a human: you are welcome to read it. If you are the AI orchestrator: this is your operating manual.
+```
+   ___   ____ _____ ___  ____  _   _ ____
+  / _ \ / ___|_   _/ _ \|  _ \| | | / ___|
+ | | | | |     | || | | | |_) | | | \___ \
+ | |_| | |___  | || |_| |  __/| |_| |___) |
+  \___/ \____| |_| \___/|_|    \___/|____/
+```
+
+## What is Octopus?
+
+Octopus turns your AI coding terminal into a five-agent team. You are the Purple Manager: the orchestrator. You delegate to four specialist agents (Researcher, Designer, Maker, Marketer), coordinate their work, and synthesize results.
+
+| Agent | Color | Role |
+|-------|-------|------|
+| Researcher | Yellow | Intelligence and analysis |
+| Designer | Red-Orange | Solutions and architecture |
+| Maker | Blue | Building and deployment |
+| Marketer | Green | Distribution and growth |
+| Manager | Purple | Orchestration (the Octopus) |
+
+## Install
+
+### Option A: Terminal command (recommended)
+
+Install `octopus` as a global command. Works from any directory.
+
+```bash
+git clone https://github.com/victordelrosal/octopus
+cd octopus && bash install.sh
+source ~/.zshrc
+octopus
+```
+
+The installer copies two files to `~/.claude/` and appends a shell function to `~/.zshrc`. That's it. Nothing else is touched.
+
+```
+octopus              # Interactive model selection
+octopus --opus       # Use Opus directly
+octopus --sonnet     # Use Sonnet directly
+octopus --haiku      # Use Haiku directly
+```
+
+### Option B: Project mode (Claude Code)
+
+```bash
+git clone https://github.com/victordelrosal/octopus
+cd octopus && claude
+```
+
+CLAUDE.md and agent definitions load automatically. No hooks, no settings.json, no config changes. Your existing setup stays untouched.
+
+### Option C: Any LLM terminal tool
+
+Add [`octopus.md`](octopus.md) to your system prompt or project context. Works with Codex CLI, Gemini CLI, OpenCode, or any terminal with tool use.
+
+### Option D: Let AI do it
+
+Already in Claude Code? Just tell it:
+
+```
+Clone https://github.com/victordelrosal/octopus and set it up for me
+```
+
+**Web:** [victordelrosal.com/octopus](https://victordelrosal.com/octopus/)
+
+**Safety:** Octopus never touches your system config beyond what the installer explicitly does (append to `.zshrc` with clear markers, copy two files to `~/.claude/`). No settings.json, no hooks, no surprises.
+
+## Commands
+
+Type these naturally in an Octopus session:
+
+| Command | What Happens |
+|---------|-------------|
+| `research [topic]` | Spawn Yellow Researcher agent |
+| `design [brief]` | Spawn Red-Orange Designer agent |
+| `build [spec]` | Spawn Blue Maker agent |
+| `market [product]` | Spawn Green Marketer agent |
+| `sprint [goal]` | Full pipeline: research > design > build > market |
+| `team [tasks]` | Parallel fan-out to multiple agents |
+| `review [work]` | Iterative review loop between two agents |
+| `help` | Show available agents and commands |
+
+## How It Works
+
+1. The **Purple Manager** (you or the lead agent) receives a task
+2. It decomposes the task into stages assigned to specialist agents
+3. Agents execute in **sequential pipelines**, **parallel fan-outs**, or **review loops**
+4. The Manager enforces quality gates between stages
+5. Results are synthesized and delivered
 
 ## What's Here
 
-| File | For | Description |
-|------|-----|-------------|
-| [`index.html`](https://victordelrosal.com/orchestrator/) | AI agents (primary), humans (secondary) | The full interactive manual, designed for AI consumption with structured metadata, semantic HTML, and machine-parseable data attributes |
-| [`THE-ORCHESTRATOR.md`](THE-ORCHESTRATOR.md) | Claude Code agents | Claude Code-specific edition with Agent Teams Tier 2, TeamCreate/SendMessage tools, tmux patterns |
-| [`THE-ORCHESTRATOR-GENERIC.md`](THE-ORCHESTRATOR-GENERIC.md) | Any agentic terminal | Platform-agnostic edition for Codex CLI, opencode, Gemini CLI, Aider, Cursor Agent, Windsurf, or any terminal with tool use and filesystem access |
+| File | Purpose |
+|------|---------|
+| [`octopus.md`](octopus.md) | **The OS.** System prompt with agent definitions, orchestration patterns, spawn templates, and commands. |
+| [`install.sh`](install.sh) | Terminal command installer. Copies files to `~/.claude/`, adds `octopus()` to `.zshrc`. |
+| [`octopus-banner.sh`](octopus-banner.sh) | 5-color ASCII banner script (one color per agent). |
+| [`.claude/agents/`](.claude/agents/) | Claude Code subagent definitions for all five agent types. |
+| [`octopus-concept.md`](octopus-concept.md) | Conceptual paper: orchestration theory, security models, anti-patterns. |
+| [`octopus-concept-generic.md`](octopus-concept-generic.md) | Platform-agnostic version of the conceptual paper. |
 
-## Live Page
+## Uninstall
 
-**[victordelrosal.com/orchestrator](https://victordelrosal.com/orchestrator/)**
-
-## How to Use
-
-**If you are an AI orchestrator:** download the .md file matching your platform and inject it as system context before orchestrating any multi-agent operation.
-
-**If you are a human operator:** give your AI orchestrator this URL or the relevant .md file as part of its operating context.
-
-## What It Covers
-
-- Identity and individual capabilities of the orchestrating agent
-- Team capabilities: parallelism, independent context, specialization, adversarial quality
-- Three orchestration modes: subagents, peer teams, CLI pipelines
-- Contract-first delegation (the most important section)
-- The 11 task dimensions for evaluating any delegation decision
-- Five orchestration patterns: Orchestrator-Worker, Pipeline, Specialist Team, Recursive/Nested, Review Loop
-- Context engineering: the real bottleneck
-- Intent engineering: the layer above context
-- Coordination protocols and filesystem handoff
-- Security, authority boundaries, and scope creep prevention
-- Monitoring, adaptive coordination, and debugging agent failures
-- The Five Innovators universal role framework
-- 10 anti-patterns, pre-flight checklist, spawn templates
-- State management for crash recovery
+1. Remove the `# >>> octopus-cli >>>` block from `~/.zshrc`
+2. Delete: `rm ~/.claude/octopus-banner.sh ~/.claude/octopus.md`
 
 ## Sources
 
-This manual synthesizes frameworks from:
-
-- **Intelligent AI Delegation** (Tomasev, Franklin, Osindero; Google DeepMind, 2026): contract-first delegation, 11 task dimensions, privilege attenuation, cognitive monoculture risk
-- **Agent Teams for Claude Code**: three-tier architecture, orchestration patterns, coordination protocols, anti-patterns
-- **The Infinite Team** (del Rosal): the orchestrator as conductor, swarm pattern, trust stack
-- **The Agentic Organization** (del Rosal / Frost): Five Innovators framework, context engineering, intent engineering, model tiering
+Built on frameworks from Google DeepMind (Intelligent AI Delegation), Claude Code (Agent Teams), and the Five Innovators model.
 
 ## Author
 
@@ -56,4 +120,4 @@ Victor del Rosal / [fiveinnolabs](https://fiveinnolabs.com) / March 2026
 
 ## License
 
-This work is shared openly. Use it to make your AI teams better.
+Open. Use it to ship faster.
