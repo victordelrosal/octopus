@@ -269,6 +269,97 @@
     font-weight: 600;
   }
 
+  /* ── ANNOUNCEMENT BANNER ── */
+  .announce-banner {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(66, 133, 244, 0.08) 100%);
+    border: 1px solid rgba(156, 39, 176, 0.35);
+    border-radius: 14px;
+    padding: 28px 28px;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .announce-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--yellow), var(--red-orange), var(--blue), var(--green), var(--purple));
+  }
+  .announce-badge {
+    flex-shrink: 0;
+    background: var(--purple);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  .announce-content { flex: 1; }
+  .announce-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .announce-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .announce-text code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--purple-light);
+    background: rgba(156, 39, 176, 0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .announce-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .announce-chip {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(156, 39, 176, 0.1);
+    border: 1px solid rgba(156, 39, 176, 0.2);
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--purple-light);
+    letter-spacing: 0.5px;
+  }
+  .announce-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--purple-light);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .announce-link:hover { color: var(--text-primary); text-decoration: underline; }
+  @media (max-width: 480px) {
+    .announce-banner {
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px 18px;
+      margin-bottom: 32px;
+    }
+    .announce-title { font-size: 17px; }
+    .announce-text { font-size: 13px; }
+    .announce-chip { font-size: 10px; padding: 3px 10px; }
+  }
+
   /* ── QUICK START ── */
   .qs-box {
     background: var(--bg-surface);
@@ -837,6 +928,23 @@
   </section>
 
 <div class="container">
+
+  <!-- ANNOUNCEMENT BANNER -->
+  <div class="announce-banner" id="announce">
+    <div class="announce-badge">v1.2</div>
+    <div class="announce-content">
+      <div class="announce-title">Team Mode v2: Agents That Converse</div>
+      <div class="announce-text">Five agents. Five terminals. One conversation. All agents spawn concurrently and talk to each other through a shared conversation log. No more sequential pipelines. Real collaboration, powered by <code>conversation.jsonl</code> and <code>blackboard.md</code>.</div>
+      <div class="announce-features">
+        <span class="announce-chip">Concurrent spawning</span>
+        <span class="announce-chip">Inter-agent chat</span>
+        <span class="announce-chip">Live conversation feed</span>
+        <span class="announce-chip">Blackboard protocol</span>
+        <span class="announce-chip">Dependency polling</span>
+      </div>
+      <a href="#changelog" class="announce-link">Read the full changelog &darr;</a>
+    </div>
+  </div>
 
   <!-- QUICK START -->
   <section class="section" id="quickstart">
