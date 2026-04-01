@@ -48,6 +48,17 @@ echo -e "${DIM}        ~/.claude/octopus-banner.sh${RESET}"
 cp "$SCRIPT_DIR/octopus.md" ~/.claude/octopus.md
 echo -e "${DIM}        ~/.claude/octopus.md${RESET}"
 
+# Copy venture metaskill (if present)
+if [[ -d "$SCRIPT_DIR/metaskills/venture" ]]; then
+  mkdir -p ~/.claude/octopus-venture
+  cp "$SCRIPT_DIR/metaskills/venture/product-types.md" ~/.claude/octopus-venture/
+  cp "$SCRIPT_DIR/metaskills/venture/hunt-mode.md" ~/.claude/octopus-venture/
+  cp "$SCRIPT_DIR/metaskills/venture/harvest-mode.md" ~/.claude/octopus-venture/
+  cp "$SCRIPT_DIR/metaskills/venture/spawn-templates.md" ~/.claude/octopus-venture/
+  cp "$SCRIPT_DIR/metaskills/venture/README.md" ~/.claude/octopus-venture/
+  echo -e "${DIM}        ~/.claude/octopus-venture/ (5 files)${RESET}"
+fi
+
 # Step 2: Append octopus() function to ~/.zshrc (guarded)
 echo -e "${BLUE}  [2/3]${RESET} Adding octopus() to ~/.zshrc"
 

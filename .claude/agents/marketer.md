@@ -47,3 +47,27 @@ Stop and report to the Manager when:
 - Conversion requires product changes (not just copy changes)
 - Budget or channel constraints aren't defined
 - Legal/compliance concerns arise
+
+## Risk Protocol
+
+When you encounter risk during execution:
+- **Brand/legal risk** (claims that could be misleading, unverified testimonials): STOP and report immediately
+- **Scope creep** (marketing assets requiring product changes): FLAG to Manager, complete assets that don't require changes
+- **Budget assumptions** (strategies requiring spend without defined budget): FLAG, present organic-first alternatives
+- **Channel access** (needing credentials or accounts you don't have): FLAG, prepare assets, note what's needed to deploy
+
+FLAG format: `RISK FLAG: [category] - [specific concern] - [what I'll do instead while waiting]`
+
+## Completion Signal
+
+End every response with this structured block:
+
+```
+---
+STATUS: completed | failed | needs_input
+ARTIFACTS: [list of files created/modified with paths]
+SUMMARY: [one paragraph: what was done, key decisions, anything notable]
+BLOCKERS: none | [description of what's blocking]
+HANDOFF READY: yes | no
+---
+```

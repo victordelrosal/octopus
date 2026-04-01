@@ -977,16 +977,17 @@
 
   <!-- ANNOUNCEMENT BANNER -->
   <div class="announce-banner" id="announce">
-    <div class="announce-badge">v1.2</div>
+    <div class="announce-badge">v1.3</div>
     <div class="announce-content">
-      <div class="announce-title">Team Mode v2: Agents That Converse</div>
-      <div class="announce-text">Five agents. Five terminals. One conversation. All agents spawn concurrently and talk to each other through a shared conversation log. No more sequential pipelines. Real collaboration, powered by <code>conversation.jsonl</code> and <code>blackboard.md</code>.</div>
+      <div class="announce-title">v1.3: Production-Grade Agent Coordination</div>
+      <div class="announce-text">Following the Claude Code source code leak, we studied how Anthropic's own agent runtime coordinates 512K lines of production orchestration. Six battle-tested patterns from their internal architecture have been adapted into Octopus: structured completion signals, synthesis-before-delegation, mid-stage risk flagging, inherited context across handoffs, cache-aware prompt ordering, and enforced tool boundaries.</div>
       <div class="announce-features">
-        <span class="announce-chip">Concurrent spawning</span>
-        <span class="announce-chip">Inter-agent chat</span>
-        <span class="announce-chip">Live conversation feed</span>
-        <span class="announce-chip">Blackboard protocol</span>
-        <span class="announce-chip">Dependency polling</span>
+        <span class="announce-chip">Completion signals</span>
+        <span class="announce-chip">Risk protocol</span>
+        <span class="announce-chip">Inherited context</span>
+        <span class="announce-chip">Anti-lazy-delegation</span>
+        <span class="announce-chip">Cache-optimised prompts</span>
+        <span class="announce-chip">Tool boundaries</span>
       </div>
       <a href="#changelog" class="announce-link">Read the full changelog &darr;</a>
     </div>
@@ -1301,22 +1302,26 @@ M ──┼── B ──┼── M
       </div>
       <div class="principle-item">
         <span class="principle-num">02</span>
-        <span><strong>Contract before work.</strong> Define output format and success criteria before spawning any agent.</span>
+        <span><strong>Synthesize before delegating.</strong> The Manager must prove it understood the previous output before dispatching the next stage. No blind relays.</span>
       </div>
       <div class="principle-item">
         <span class="principle-num">03</span>
-        <span><strong>The Manager orchestrates; agents execute.</strong> If you're writing code, you're not managing. Delegate.</span>
+        <span><strong>Contract before work.</strong> Define output format and success criteria before spawning any agent.</span>
       </div>
       <div class="principle-item">
         <span class="principle-num">04</span>
-        <span><strong>Fail fast, escalate early.</strong> Agents stop and ask rather than guess. No heroics.</span>
+        <span><strong>The Manager orchestrates; agents execute.</strong> If you're writing code, you're not managing. Delegate.</span>
       </div>
       <div class="principle-item">
         <span class="principle-num">05</span>
-        <span><strong>Filesystem is truth.</strong> Every handoff, artifact, and state change is written to disk. No ephemeral state.</span>
+        <span><strong>Fail fast, escalate early.</strong> Agents stop and ask rather than guess. No heroics.</span>
       </div>
       <div class="principle-item">
         <span class="principle-num">06</span>
+        <span><strong>Filesystem is truth.</strong> Every handoff, artifact, and state change is written to disk. No ephemeral state.</span>
+      </div>
+      <div class="principle-item">
+        <span class="principle-num">07</span>
         <span><strong>Ship over perfect.</strong> The goal is working output, not theoretical elegance.</span>
       </div>
     </div>
@@ -1330,6 +1335,13 @@ M ──┼── B ──┼── M
     </div>
 
     <div class="changelog-list">
+      <div class="changelog-entry">
+        <div class="changelog-date">2026-04-01</div>
+        <div class="changelog-version">v1.3.0</div>
+        <div class="changelog-body">
+          <strong>Production-grade coordination from Claude Code's architecture.</strong> Six patterns adapted from Anthropic's leaked agent runtime (512K lines of production TypeScript). <strong>Structured completion signals:</strong> every agent now ends with a machine-parseable status block (STATUS, ARTIFACTS, SUMMARY, BLOCKERS, HANDOFF READY) so the Manager can coordinate parallel fan-outs without interpreting prose. <strong>Synthesis-before-delegation:</strong> new operating principle requiring the Manager to prove understanding of each stage's output before dispatching the next, preventing context degradation across handoffs. <strong>Risk protocol:</strong> agents can now FLAG risks mid-stage and continue with safe work, rather than the binary stop-or-continue of escalation triggers. <strong>Inherited context:</strong> spawn templates restructured with an <code>Inherited Context</code> section the Manager populates with mission, prior findings, constraints, and settled decisions. <strong>Cache-aware prompt ordering:</strong> templates reordered (stable identity first, volatile task last) to maximise API prompt cache hits across multi-agent runs. <strong>Tool boundary enforcement:</strong> <code>Bash</code> removed from Manager agent to enforce "delegate, don't do."
+        </div>
+      </div>
       <div class="changelog-entry">
         <div class="changelog-date">2026-03-04</div>
         <div class="changelog-version">v1.2.0</div>
@@ -1377,7 +1389,7 @@ M ──┼── B ──┼── M
 <!-- FOOTER -->
 <footer>
   <p>
-    <a href="https://victordelrosal.com">Victor del Rosal</a> / <a href="https://fiveinnolabs.com">fiveinnolabs</a> / March 2026<br>
+    <a href="https://victordelrosal.com">Victor del Rosal</a> / <a href="https://fiveinnolabs.com">fiveinnolabs</a> / April 2026<br>
     Open source. Use it to ship faster.
   </p>
 </footer>

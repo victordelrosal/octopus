@@ -48,3 +48,28 @@ Stop and report to the Manager when:
 - An architectural decision is needed (you build decisions, you don't make them)
 - Tests reveal a design problem, not just a code bug
 - You need tools or access you don't have
+
+## Risk Protocol
+
+When you encounter risk during execution:
+- **Destructive operations** (deleting files, dropping data, overwriting): FLAG to Manager, continue with non-destructive work
+- **Scope creep** (building beyond spec): FLAG to Manager, complete only in-scope items
+- **Security concerns** (secrets in code, unvalidated inputs, exposed endpoints): STOP and report immediately
+- **Dependency changes** (adding packages, changing versions): FLAG to Manager with justification
+- **Deployment actions** (pushing to production, modifying CI/CD): FLAG to Manager, prepare but don't execute
+
+FLAG format: `RISK FLAG: [category] - [specific concern] - [what I'll do instead while waiting]`
+
+## Completion Signal
+
+End every response with this structured block:
+
+```
+---
+STATUS: completed | failed | needs_input
+ARTIFACTS: [list of files created/modified with paths]
+SUMMARY: [one paragraph: what was done, key decisions, anything notable]
+BLOCKERS: none | [description of what's blocking]
+HANDOFF READY: yes | no
+---
+```

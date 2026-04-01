@@ -1,4 +1,5 @@
 # OCTOPUS
+# Version: v2-pixel-agents
 
 ```
    ___   ____ _____ ___  ____  _   _ ____
@@ -7,8 +8,9 @@
  | |_| | |___  | || |_| |  __/| |_| |___) |
   \___/ \____| |_| \___/|_|    \___/|____/
 
-  Multi-Agent Orchestration OS
+  Multi-Agent Orchestration OS  +  Pixel Agents
   Five agents. One orchestrator. Ship anything.
+  Powered by github.com/pablodelucca/pixel-agents
 ```
 
 ## What is Octopus?
@@ -334,6 +336,9 @@ These are AI-interpreted commands. Type them naturally in an Octopus session.
 | `team [tasks]` | Parallel fan-out to multiple agents |
 | `review [work]` | Review loop between two agents |
 | `help` | Show available commands and agent types |
+| `cycle hunt [niche]` | **Venture metaskill:** discover and launch a micro-tool |
+| `cycle harvest [product]` | **Venture metaskill:** compound a winning product |
+| `cycle status` | **Venture metaskill:** check all active products |
 
 ### How commands work
 
@@ -384,8 +389,90 @@ COMMANDS
   review [work]       Review loop
   help                Show this menu
 
+METASKILLS
+  cycle hunt [niche]    Venture: find and launch a micro-tool
+  cycle harvest [name]  Venture: compound a winning product
+  cycle status          Venture: check active products
+
 What would you like to orchestrate?
 ```
+
+---
+
+## Pixel Agents Integration
+
+Octopus integrates with [pixel-agents](https://github.com/pablodelucca/pixel-agents), a VS Code extension that visualizes agents as animated pixel art characters in a virtual office.
+
+### What Happens
+
+When you spawn subagents via the Agent tool, pixel-agents automatically:
+1. Detects the subagent in the JSONL transcript
+2. Creates a pixel character with a matrix spawn effect
+3. Animates the character (typing when building, reading when researching)
+4. Shows a matrix despawn effect when the agent completes
+
+### Agent to Character Mapping
+
+| Agent | Color | Character | Room |
+|-------|-------|-----------|------|
+| Researcher & Analyst | Yellow | char_1 (warm outfit, dreadlocks) | Research Library |
+| Designer | Red-Orange | char_2 (orange shirt, afro) | Design Studio |
+| Maker | Blue | char_0 (blue shirt, short hair) | Hacker Den |
+| Marketer | Green | char_4 (light shirt, brown hair) | Marketing Office |
+| Manager | Purple | char_5 (dark outfit, afro) | Executive Suite |
+
+### Setup
+
+Install the extension from VS Code Marketplace or run:
+
+```bash
+bash pixel-agents/setup.sh
+```
+
+### Visual Behavior
+
+| Mode | What You See |
+|------|-------------|
+| Sequential | Characters spawn/despawn one at a time |
+| Parallel (team) | Multiple characters spawn and work simultaneously |
+| Sprint | Characters appear in sequence as the pipeline progresses |
+| Review loop | Two characters alternate between active and idle |
+
+---
+
+## Metaskills
+
+Metaskills are mission-specific overlays that add doctrine, workflows, and constraints to Octopus without modifying the core OS.
+
+### Venture (installed)
+
+The Venture metaskill turns Octopus into a constrained autonomous revenue engine. One recipe (single-page micro-tools), two modes (hunt for new candidates, harvest winners), one compounding intelligence loop.
+
+**When the user says any of these:**
+- `cycle hunt [niche]`
+- `cycle harvest [product-name]`
+- `cycle status`
+- "create a new venture"
+- "use the venture metaskill"
+- "find me a passive income opportunity"
+- "launch a micro-tool"
+- or any natural language that implies wanting to discover, build, and sell a small digital product
+
+**The Manager MUST read these files before proceeding:**
+1. `~/.claude/octopus-venture/product-types.md` — what can be built, how it monetizes, kill criteria
+2. `~/.claude/octopus-venture/hunt-mode.md` — fixed pipeline for discovery and launch (if hunt mode)
+3. `~/.claude/octopus-venture/harvest-mode.md` — fixed pipeline for compounding winners (if harvest mode)
+4. `~/.claude/octopus-venture/spawn-templates.md` — revised agent templates for venture mode
+
+**Read these files using the Read tool. Do not guess their contents. Follow them exactly.**
+
+The venture metaskill requires a one-time setup:
+- Cloudflare account + wrangler CLI installed
+- Lemon Squeezy account with API key
+- `.octopus/.env` file with credentials
+- `.octopus/venture/` and `.octopus/intelligence/` directory structure
+
+If the user hasn't completed setup, walk them through it before running the first cycle.
 
 ---
 

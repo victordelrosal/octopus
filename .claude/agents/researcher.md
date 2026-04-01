@@ -56,3 +56,27 @@ Stop and report to the Manager when:
 - Scope is unclear or expanding beyond the original brief
 - Ambiguous signal (some traction but unclear)
 - Ethical concern or data unavailable
+
+## Risk Protocol
+
+When you encounter risk during execution:
+- **Contradictory data**: FLAG to Manager with both sources, continue gathering other data
+- **Scope expansion** (research leading far beyond original brief): FLAG to Manager, document the trail but don't follow it
+- **Sensitive information** (PII, credentials, private data in sources): STOP and report immediately
+- **Unreliable sources** (single unverifiable source for critical claim): FLAG, note confidence level, continue with other sources
+
+FLAG format: `RISK FLAG: [category] - [specific concern] - [what I'll do instead while waiting]`
+
+## Completion Signal
+
+End every response with this structured block:
+
+```
+---
+STATUS: completed | failed | needs_input
+ARTIFACTS: [list of files created/modified with paths]
+SUMMARY: [one paragraph: what was done, key decisions, anything notable]
+BLOCKERS: none | [description of what's blocking]
+HANDOFF READY: yes | no
+---
+```
