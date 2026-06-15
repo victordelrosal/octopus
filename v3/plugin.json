@@ -1,0 +1,249 @@
+{
+  "name": "octopus",
+  "version": "3.0.0",
+  "description": "Five-agent orchestration OS for Claude Code. Research, design, build, verify, and ship with typed handoffs, a cold verifier, and gate primitives for irreversible actions.",
+  "author": "Victor del Rosal / fiveinnolabs",
+  "homepage": "https://github.com/victordelrosal/octopus",
+  "install_path": "~/.claude/plugins/octopus",
+
+  "no_hijack_guarantee": {
+    "installs_hooks": false,
+    "mutates_claude_md": false,
+    "mutates_settings_json": false,
+    "auto_runs_on_session_start": false,
+    "touches_files_outside_install_path": false,
+    "note": "This plugin adds capability only. It does not seize the session. Safe to remove completely: rm -rf ~/.claude/plugins/octopus. No residual side effects."
+  },
+
+  "agents": [
+    {
+      "name": "researcher",
+      "color": "yellow",
+      "model": "claude-haiku-4-5",
+      "definition": "v3/agents/researcher.md",
+      "tools": ["Read", "WebSearch", "WebFetch", "Bash"],
+      "mcp": [],
+      "isolation": null,
+      "description": "Intelligence gathering and evaluation. Scout mode (forward) and Evaluate mode (backward). Never builds or publishes."
+    },
+    {
+      "name": "designer",
+      "color": "red-orange",
+      "model": "claude-sonnet-4-6",
+      "definition": "v3/agents/designer.md",
+      "tools": ["Read", "Write", "Edit"],
+      "mcp": [],
+      "isolation": null,
+      "description": "Creates design specs, architectures, and experience flows from research briefs. Never writes production code."
+    },
+    {
+      "name": "maker",
+      "color": "blue",
+      "model": "claude-sonnet-4-6",
+      "definition": "v3/agents/maker.md",
+      "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
+      "mcp": ["cloudflare-pages", "stripe"],
+      "isolation": "worktree",
+      "description": "Builds, tests, and prepares deployments from design specs. All deploy actions go through gate()."
+    },
+    {
+      "name": "marketer",
+      "color": "green",
+      "model": "claude-haiku-4-5",
+      "definition": "v3/agents/marketer.md",
+      "tools": ["Read", "Write"],
+      "mcp": [],
+      "isolation": null,
+      "description": "Produces distribution drafts: copy, landing pages, email sequences, social posts. Never publishes autonomously."
+    },
+    {
+      "name": "manager",
+      "color": "purple",
+      "model": "claude-opus-4-8",
+      "definition": "v3/agents/manager.md",
+      "tools": ["Read", "Write"],
+      "mcp": [],
+      "isolation": null,
+      "description": "Orchestrator. Decomposes tasks, dispatches agents, enforces quality gates, synthesizes results. Does not do specialist work."
+    },
+    {
+      "name": "verifier",
+      "color": "cold",
+      "model": "claude-sonnet-4-6",
+      "definition": null,
+      "tools": ["Read"],
+      "mcp": [],
+      "isolation": null,
+      "cold_context": true,
+      "description": "Cold independent verifier. Fresh context each round. Read-only. Grades pipeline exit with no access to builder reasoning."
+    }
+  ],
+
+  "commands": [
+    {
+      "name": "research",
+      "args": "[topic]",
+      "description": "Spawn Yellow Researcher in Scout mode. Gathers intelligence on a niche or topic.",
+      "spawns": "researcher"
+    },
+    {
+      "name": "evaluate",
+      "args": "[target]",
+      "description": "Spawn Yellow Analyst in Evaluate mode. Analyses live product metrics and recommends KILL / PIVOT / SCALE.",
+      "spawns": "researcher"
+    },
+    {
+      "name": "design",
+      "args": "[brief]",
+      "description": "Spawn Red-Orange Designer. Produces a design spec from a brief or research handoff.",
+      "spawns": "designer"
+    },
+    {
+      "name": "build",
+      "args": "[spec]",
+      "description": "Spawn Blue Maker. Builds, tests, and prepares deployment from a design spec.",
+      "spawns": "maker"
+    },
+    {
+      "name": "market",
+      "args": "[product]",
+      "description": "Spawn Green Marketer. Produces distribution drafts (copy, email, social posts) for human review.",
+      "spawns": "marketer"
+    },
+    {
+      "name": "sprint",
+      "args": "[goal]",
+      "description": "Full sequential pipeline: research then design then build then verify then market. Uses the sprint workflow.",
+      "workflow": "sprint"
+    },
+    {
+      "name": "team",
+      "args": "[tasks]",
+      "description": "Parallel fan-out: dispatch independent tasks to multiple agents simultaneously, then synthesize.",
+      "workflow": "team"
+    },
+    {
+      "name": "review",
+      "args": "[work]",
+      "description": "Adversarial review loop: builder revises until a cold verifier passes or budget is exhausted.",
+      "workflow": "review"
+    },
+    {
+      "name": "cycle",
+      "args": "hunt [niche] | harvest [product] | status",
+      "description": "Foundry venture commands. Requires the foundry skill to be enabled.",
+      "skill": "foundry",
+      "subcommands": [
+        { "name": "hunt",    "args": "[niche]",   "description": "Discover and launch a new MICRO_TOOL candidate." },
+        { "name": "harvest", "args": "[product]", "description": "Compound a winning product: SEO expansion, conversion optimization, variants." },
+        { "name": "status",  "args": "",          "description": "Portfolio dashboard across all active products." }
+      ]
+    }
+  ],
+
+  "workflows": [
+    {
+      "name": "sprint",
+      "script": "v3/workflows/sprint.workflow.js",
+      "description": "Full sequential pipeline: research to design to build to verify to market.",
+      "graph": "v3/engine/graph.js#sprint",
+      "inputs": {
+        "goal":     { "type": "string", "required": true,  "description": "One-sentence sprint goal" },
+        "criteria": { "type": "array",  "required": false, "description": "User-defined acceptance criteria to append to the frozen set" },
+        "context":  { "type": "object", "required": false, "description": "Additional context injected into agent prompts" }
+      }
+    },
+    {
+      "name": "team",
+      "script": "v3/workflows/team.workflow.js",
+      "description": "Parallel fan-out: dispatch independent tasks simultaneously, then synthesize.",
+      "graph": "v3/engine/graph.js#team",
+      "inputs": {
+        "tasks": { "type": "array",  "required": true,  "description": "Array of task objects: { id, type, description, context }" },
+        "goal":  { "type": "string", "required": false, "description": "Overarching team goal for synthesis context" }
+      }
+    },
+    {
+      "name": "review",
+      "script": "v3/workflows/review.workflow.js",
+      "description": "Adversarial review loop: builder revises until cold verifier passes or budget exhausted.",
+      "graph": "v3/engine/graph.js#review",
+      "inputs": {
+        "task":      { "type": "string", "required": true,  "description": "What to build or refine" },
+        "criteria":  { "type": "array",  "required": true,  "description": "Binary acceptance criteria, frozen at loop start" },
+        "artifacts": { "type": "array",  "required": false, "description": "Existing files to review" },
+        "maxRounds": { "type": "number", "required": false, "description": "Max iterations (default: 3)" },
+        "agentType": { "type": "string", "required": false, "description": "Builder agent type: maker, designer, or marketer" }
+      }
+    }
+  ],
+
+  "skills": [
+    {
+      "name": "foundry",
+      "skill_id": "octopus/foundry",
+      "definition": "v3/skills/foundry/SKILL.md",
+      "description": "Paid venture vertical. Discover, build, price, and ship single-page micro-tools for passive income. Includes cycle hunt, cycle harvest, cycle status.",
+      "activation": "opt-in",
+      "activation_command": "claude skill enable octopus/foundry",
+      "tier": "paid",
+      "always_loaded": false
+    }
+  ],
+
+  "mcp_connectors": [
+    {
+      "name": "cloudflare-pages",
+      "used_by": ["maker"],
+      "purpose": "Deploy build artifacts to Cloudflare Pages. Prepare and execute deploys only after gate() approves the deploy action.",
+      "gated": true,
+      "gate_action": "deploy",
+      "note": "Required for Foundry (cycle hunt build stage). Optional for base plugin sprint/build commands."
+    },
+    {
+      "name": "stripe",
+      "used_by": ["maker"],
+      "purpose": "Create and update products and prices. No charge execution. No subscription creation without gate() approval.",
+      "gated": true,
+      "gate_action": "stripe-write",
+      "note": "Used in Foundry for product creation. Charges and subscriptions are permanently gated."
+    }
+  ],
+
+  "gate_config": {
+    "permanently_gated_action_types": [
+      "deploy",
+      "publish",
+      "send",
+      "post",
+      "email",
+      "purchase",
+      "delete",
+      "publish-distribution",
+      "stripe-write"
+    ],
+    "timeout_seconds": 60,
+    "approval_log": ".octopus/PENDING-APPROVALS.md",
+    "note": "These action types cannot be bypassed by any agent instruction or config flag. Distribution actions are permanently gated: Octopus drafts, a human sends."
+  },
+
+  "verify_config": {
+    "mandatory_security_checks": [
+      "SECRET_SCAN: scan all staged files for API keys, tokens, passwords, private keys, .env contents",
+      "DEPENDENCY_AUDIT: check package.json, requirements.txt, go.mod for high and critical CVEs"
+    ],
+    "cold_context": true,
+    "note": "Security checks run before any user-defined criteria. A single finding fails the entire pipeline. Both checks are mandatory and cannot be disabled."
+  },
+
+  "filesystem_convention": {
+    "handoffs": ".octopus/handoffs/",
+    "escalations": ".octopus/ESCALATIONS.md",
+    "pending_approvals": ".octopus/PENDING-APPROVALS.md",
+    "sprint_done": ".octopus/SPRINT-DONE.md",
+    "team_done": ".octopus/TEAM-DONE.md",
+    "review_done": ".octopus/REVIEW-DONE.md",
+    "marketing": ".octopus/marketing/",
+    "foundry_portfolio": ".octopus/foundry/portfolio.json"
+  }
+}

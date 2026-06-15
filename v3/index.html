@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<!-- GITHUB REPO (edit in one place): change the REPO constant in the <script> block at bottom -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Octopus v3: Self-Verifying Multi-Agent OS for Claude Code</title>
+<meta name="description" content="Octopus v3 is a Claude Code plugin: typed handoffs, per-role model routing, worktree isolation, and a cold verifier plus STOP-gate at every pipeline exit.">
+<meta name="theme-color" content="#0d0117">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Octopus v3: Self-Verifying Multi-Agent OS">
+<meta property="og:description" content="Orchestration is now executed code, not improvised prose. Five agents. Schema-typed handoffs. A cold verifier that cannot be biased by the builder.">
+<meta property="og:url" content="https://github.com/victordelrosal/octopus">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Octopus v3: Self-Verifying Multi-Agent OS">
+<meta name="twitter:description" content="Orchestration is now executed code, not improvised prose.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET ──────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ─── CUSTOM PROPERTIES ──────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+  --bg:          #0d0117;
+  --bg-surface:  #110620;
+  --bg-card:     #160a26;
+  --bg-card-hov: #1d1032;
+  --bg-code:     #09040f;
+  --border:      rgba(156,39,176,0.14);
+  --border-glow: rgba(156,39,176,0.42);
+  --ink:         #f0e6ff;
+  --ink-2:       #c8b4e8;
+  --ink-3:       #8e7aa8;
+  --ink-4:       #544668;
+  --yellow:      #ffc107;
+  --yellow-glow: rgba(255,193,7,0.22);
+  --orange:      #ff5722;
+  --orange-glow: rgba(255,87,34,0.22);
+  --blue:        #4285f4;
+  --blue-glow:   rgba(66,133,244,0.22);
+  --green:       #4caf50;
+  --green-glow:  rgba(76,175,80,0.22);
+  --purple:      #9c27b0;
+  --purple-lt:   #ce93d8;
+  --purple-glow: rgba(156,39,176,0.28);
+  --cold:        #a8c0d8;
+  --cold-glow:   rgba(168,192,216,0.22);
+  --gold:        #c8993a;
+  --max-w:       1060px;
+  --nav-h:       62px;
+  --r:           10px;
+}
+
+/* ─── BODY ───────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.65;
+  overflow-x: hidden;
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Ambient grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(156,39,176,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(156,39,176,0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── READING PROGRESS ───────────────────────────────────────── */
+#progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(to right, var(--yellow), var(--orange), var(--blue), var(--green), var(--purple));
+  z-index: 9999;
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
+/* ─── SKIP LINK ──────────────────────────────────────────────── */
+.skip {
+  position: absolute;
+  top: -40px; left: 16px;
+  background: var(--bg-card);
+  color: var(--ink);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  z-index: 10000;
+  text-decoration: none;
+  border: 1px solid var(--border-glow);
+}
+.skip:focus { top: 8px; }
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--nav-h);
+  background: rgba(13,1,23,0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 32px;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.nav-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+.nav-wordmark {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 2.5px;
+  color: var(--purple-lt);
+}
+.nav-ver {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 500;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+.nav-links {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+.nav-links a {
+  font-size: 13px;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color 0.18s;
+  white-space: nowrap;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: border-color 0.18s, background 0.18s;
+}
+.nav-cta:hover { border-color: var(--border-glow); background: var(--bg-card-hov); }
+.nav-cta svg { flex-shrink: 0; }
+@media (max-width: 680px) { .nav-links { display: none; } }
+@media (max-width: 420px) { .nav-ver { display: none; } }
+
+/* ─── LAYOUT PRIMITIVES ──────────────────────────────────────── */
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+.section { padding: 90px 0; }
+.section-alt { background: var(--bg-surface); }
+section[id] { scroll-margin-top: calc(var(--nav-h) + 12px); }
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+h1 {
+  font-size: clamp(36px, 5.5vw, 62px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+h2 {
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+h3 { letter-spacing: -0.012em; }
+.section-sub {
+  font-size: 17px;
+  color: var(--ink-2);
+  max-width: 640px;
+  margin-top: 16px;
+  line-height: 1.7;
+}
+
+/* ─── HERO ───────────────────────────────────────────────────── */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+}
+.hero h1 { max-width: 760px; margin: 0 auto; }
+.hero-sub {
+  font-size: 18px;
+  color: var(--ink-2);
+  max-width: 620px;
+  margin: 22px auto 0;
+  line-height: 1.7;
+}
+.rainbow-rule {
+  width: 180px;
+  height: 2px;
+  margin: 28px auto;
+  background: linear-gradient(to right, var(--yellow), var(--orange), var(--blue), var(--green), var(--purple));
+  border-radius: 1px;
+  opacity: 0.8;
+}
+.hero-ctas {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 52px;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--purple);
+  border: 1px solid var(--purple);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+.btn-primary:hover {
+  background: #b53fcc;
+  border-color: #b53fcc;
+  box-shadow: 0 0 18px rgba(156,39,176,0.4);
+}
+.btn-primary:focus-visible { outline: 2px solid var(--purple-lt); outline-offset: 3px; }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid var(--border-glow);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+.btn-secondary:hover { border-color: var(--purple-lt); color: var(--ink); background: rgba(156,39,176,0.06); }
+.btn-secondary:focus-visible { outline: 2px solid var(--purple-lt); outline-offset: 3px; }
+
+/* ─── GRAPH CONTAINER ────────────────────────────────────────── */
+.graph-wrap {
+  position: relative;
+  max-width: 870px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(9,4,15,0.9);
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(156,39,176,0.07), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.graph-wrap::before {
+  content: '● LIVE';
+  position: absolute;
+  top: 14px; right: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: rgba(76,175,80,0.65);
+  animation: blink-live 2.4s ease-in-out infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+.graph-wrap::after {
+  content: 'sprint pipeline · v3';
+  position: absolute;
+  top: 14px; left: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.2px;
+  color: var(--ink-4);
+  pointer-events: none;
+  z-index: 2;
+}
+.graph-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  padding: 28px 16px 6px;
+}
+@keyframes blink-live {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 0.25; }
+}
+
+/* ─── SVG INTERNALS ──────────────────────────────────────────── */
+.node-ring {
+  fill: none;
+  stroke-width: 2.5;
+}
+.node-fill {
+  fill: #09040f;
+}
+.node-dot-inner { opacity: 0.88; }
+.node-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-anchor: middle;
+  dominant-baseline: auto;
+}
+.node-model {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 400;
+  text-anchor: middle;
+  fill: rgba(168,150,204,0.5);
+}
+/* Tracks (dim persistent lines) */
+.track {
+  fill: none;
+  stroke: rgba(255,255,255,0.07);
+  stroke-width: 1.5;
+}
+/* Pulse paths */
+.pulse {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 12 2000;
+}
+/* Node glow rings */
+.glow-ring {
+  fill: none;
+  stroke-width: 1;
+  opacity: 0;
+}
+/* GATE diamond */
+.node-gate {
+  stroke-width: 2.5;
+}
+
+/* ─── PULSE ANIMATIONS (18s master cycle) ────────────────────── */
+/* Timing: R→D 0-11.1% | D→B 11.1-22.2% | B→V 22.2-33.3% |
+           V→Gate 33.3-41.7% | Gate-hold 41.7-50% | Gate→M 50-58.3% |
+           rest 58.3-100% */
+
+.pulse-rd {
+  stroke: var(--yellow);
+  filter: drop-shadow(0 0 4px var(--yellow));
+  stroke-dashoffset: 12;
+  animation: pulse-rd 18s linear infinite;
+}
+@keyframes pulse-rd {
+  0%     { stroke-dashoffset: 12; }
+  11.11% { stroke-dashoffset: -98; }
+  11.12% { stroke-dashoffset: 12; }
+  100%   { stroke-dashoffset: 12; }
+}
+
+.pulse-db {
+  stroke: var(--orange);
+  filter: drop-shadow(0 0 4px var(--orange));
+  stroke-dashoffset: 12;
+  animation: pulse-db 18s linear infinite;
+}
+@keyframes pulse-db {
+  0%     { stroke-dashoffset: 12; }
+  11.11% { stroke-dashoffset: 12; }
+  22.22% { stroke-dashoffset: -125; }
+  22.23% { stroke-dashoffset: 12; }
+  100%   { stroke-dashoffset: 12; }
+}
+
+.pulse-bv {
+  stroke: var(--blue);
+  filter: drop-shadow(0 0 4px var(--blue));
+  stroke-dashoffset: 12;
+  animation: pulse-bv 18s linear infinite;
+}
+@keyframes pulse-bv {
+  0%     { stroke-dashoffset: 12; }
+  22.22% { stroke-dashoffset: 12; }
+  33.33% { stroke-dashoffset: -130; }
+  33.34% { stroke-dashoffset: 12; }
+  100%   { stroke-dashoffset: 12; }
+}
+
+.pulse-vg {
+  stroke: var(--cold);
+  filter: drop-shadow(0 0 3px var(--cold));
+  stroke-dashoffset: 12;
+  animation: pulse-vg 18s linear infinite;
+}
+@keyframes pulse-vg {
+  0%     { stroke-dashoffset: 12; }
+  33.33% { stroke-dashoffset: 12; }
+  41.67% { stroke-dashoffset: -98; }
+  41.68% { stroke-dashoffset: 12; }
+  100%   { stroke-dashoffset: 12; }
+}
+
+.pulse-gm {
+  stroke: var(--green);
+  filter: drop-shadow(0 0 4px var(--green));
+  stroke-dashoffset: 12;
+  animation: pulse-gm 18s linear infinite;
+}
+@keyframes pulse-gm {
+  0%    { stroke-dashoffset: 12; }
+  50%   { stroke-dashoffset: 12; }
+  58.33% { stroke-dashoffset: -87; }
+  58.34% { stroke-dashoffset: 12; }
+  100%  { stroke-dashoffset: 12; }
+}
+
+/* ─── NODE GLOW ANIMATIONS ───────────────────────────────────── */
+.glow-research { stroke: var(--yellow); animation: glow-r 18s ease-in-out infinite; }
+@keyframes glow-r {
+  0%     { opacity: 0; }
+  1%     { opacity: 0.9; }
+  9%     { opacity: 1; }
+  11.11% { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+.glow-design { stroke: var(--orange); animation: glow-d 18s ease-in-out infinite; }
+@keyframes glow-d {
+  0%     { opacity: 0; }
+  11.11% { opacity: 0.9; }
+  19%    { opacity: 1; }
+  22.22% { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+.glow-build { stroke: var(--blue); animation: glow-b 18s ease-in-out infinite; }
+@keyframes glow-b {
+  0%     { opacity: 0; }
+  22.22% { opacity: 0.9; }
+  30%    { opacity: 1; }
+  33.33% { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+.glow-verify { stroke: var(--cold); animation: glow-v 18s ease-in-out infinite; }
+@keyframes glow-v {
+  0%     { opacity: 0; }
+  33.33% { opacity: 0.8; }
+  38%    { opacity: 1; }
+  41.67% { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+.glow-gate { stroke: var(--purple); animation: glow-gate 18s ease-in-out infinite; }
+@keyframes glow-gate {
+  0%     { opacity: 0; stroke: var(--purple); }
+  41.67% { opacity: 0; }
+  43%    { opacity: 1; stroke: #ff9800; }
+  50%    { opacity: 1; stroke: var(--green); }
+  58.33% { opacity: 0; }
+  100%   { opacity: 0; stroke: var(--purple); }
+}
+
+.glow-market { stroke: var(--green); animation: glow-m 18s ease-in-out infinite; }
+@keyframes glow-m {
+  0%     { opacity: 0; }
+  50%    { opacity: 0; }
+  55%    { opacity: 0.7; }
+  58.33% { opacity: 1; }
+  66%    { opacity: 0.8; }
+  70%    { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+/* ─── GATE ANIMATIONS ────────────────────────────────────────── */
+.node-gate {
+  fill: rgba(156,39,176,0.12);
+  stroke: var(--purple);
+  animation: gate-shape 18s linear infinite;
+}
+@keyframes gate-shape {
+  0%    { fill: rgba(156,39,176,0.12); stroke: var(--purple); }
+  41%   { fill: rgba(156,39,176,0.12); stroke: var(--purple); }
+  42.5% { fill: rgba(255,152,0,0.18);  stroke: #ff9800; }
+  49.5% { fill: rgba(255,152,0,0.18);  stroke: #ff9800; }
+  50%   { fill: rgba(76,175,80,0.18);  stroke: var(--green); }
+  58%   { fill: rgba(76,175,80,0.18);  stroke: var(--green); }
+  60%   { fill: rgba(156,39,176,0.12); stroke: var(--purple); }
+  100%  { fill: rgba(156,39,176,0.12); stroke: var(--purple); }
+}
+.gate-dot {
+  fill: var(--purple);
+  animation: gate-dot 18s linear infinite;
+}
+@keyframes gate-dot {
+  0%    { fill: var(--purple); }
+  41%   { fill: var(--purple); }
+  42.5% { fill: #ff9800; }
+  50%   { fill: var(--green); }
+  60%   { fill: var(--purple); }
+  100%  { fill: var(--purple); }
+}
+.gate-label { animation: gate-label-color 18s linear infinite; }
+@keyframes gate-label-color {
+  0%    { fill: var(--purple-lt); }
+  41%   { fill: var(--purple-lt); }
+  42.5% { fill: #ff9800; }
+  50%   { fill: var(--green); }
+  60%   { fill: var(--purple-lt); }
+  100%  { fill: var(--purple-lt); }
+}
+.gate-sub-normal { fill: rgba(168,150,204,0.45); animation: gate-sub-n 18s linear infinite; }
+@keyframes gate-sub-n {
+  0%     { opacity: 1; }
+  42.4%  { opacity: 1; }
+  42.5%  { opacity: 0; }
+  60%    { opacity: 0; }
+  60.1%  { opacity: 1; }
+  100%   { opacity: 1; }
+}
+.gate-sub-halt { fill: #ff9800; opacity: 0; animation: gate-sub-h 18s linear infinite; }
+@keyframes gate-sub-h {
+  0%     { opacity: 0; }
+  42.5%  { opacity: 1; }
+  49.9%  { opacity: 1; }
+  50%    { opacity: 0; }
+  100%   { opacity: 0; }
+}
+.gate-sub-pass { fill: var(--green); opacity: 0; animation: gate-sub-p 18s linear infinite; }
+@keyframes gate-sub-p {
+  0%     { opacity: 0; }
+  50%    { opacity: 1; }
+  59.9%  { opacity: 1; }
+  60%    { opacity: 0; }
+  100%   { opacity: 0; }
+}
+
+/* ─── SECTION: AGENTS ────────────────────────────────────────── */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+.agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 20px 20px;
+  border-top: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
+}
+.agent-card:hover {
+  background: var(--bg-card-hov);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  transform: translateY(-2px);
+}
+.agent-card:focus-within { outline: 2px solid var(--purple-lt); outline-offset: 2px; }
+.agent-color-y  { border-top-color: var(--yellow); }
+.agent-color-ro { border-top-color: var(--orange); }
+.agent-color-b  { border-top-color: var(--blue); }
+.agent-color-g  { border-top-color: var(--green); }
+.agent-color-p  { border-top-color: var(--purple); }
+.agent-role {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.agent-model-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--ink-3);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+.agent-desc {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.agent-boundary {
+  font-size: 11.5px;
+  color: var(--ink-4);
+  font-style: italic;
+  line-height: 1.5;
+}
+.cost-callout {
+  margin-top: 36px;
+  padding: 18px 22px;
+  background: rgba(156,39,176,0.07);
+  border: 1px solid rgba(156,39,176,0.18);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.65;
+}
+.cost-callout strong { color: var(--purple-lt); }
+
+/* ─── SECTION: WORKFLOW CODE ─────────────────────────────────── */
+.code-wrap {
+  margin-top: 40px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 0 48px rgba(0,0,0,0.4);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+.code-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+}
+.code-filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-left: 4px;
+}
+.code-preview-note {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+pre.code {
+  background: var(--bg-code);
+  padding: 24px 28px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.75;
+  tab-size: 2;
+  -moz-tab-size: 2;
+}
+pre.code code { background: none; padding: 0; font-size: inherit; }
+/* Syntax tokens */
+.t-kw  { color: #d8a8e8; }     /* keywords */
+.t-fn  { color: #7eb8f4; }     /* function names */
+.t-str { color: #88d8a8; }     /* strings / paths */
+.t-obj { color: #f0d0a0; }     /* object keys */
+.t-cm  { color: #4e4060; }     /* comments */
+.t-bool{ color: #f4a261; }     /* booleans / values */
+.t-yr  { color: var(--yellow); }   /* yellow agent */
+.t-ro  { color: var(--orange); }   /* red-orange agent */
+.t-bl  { color: var(--blue); }     /* blue agent */
+.t-gr  { color: var(--green); }    /* green agent */
+.t-pu  { color: var(--purple-lt); }/* purple/verify */
+.code-caption {
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  line-height: 1.65;
+  max-width: 680px;
+}
+
+/* ─── SECTION: VERIFY / GATE ─────────────────────────────────── */
+.vg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 40px;
+}
+@media (max-width: 640px) { .vg-grid { grid-template-columns: 1fr; } }
+.vg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 28px 26px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.vg-card:hover { border-color: rgba(156,39,176,0.28); transform: translateY(-2px); }
+.vg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.vg-badge-verify { background: rgba(168,192,216,0.1); color: var(--cold); border: 1px solid rgba(168,192,216,0.22); }
+.vg-badge-gate   { background: rgba(156,39,176,0.1);  color: var(--purple-lt); border: 1px solid var(--border-glow); }
+.vg-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--ink); }
+.vg-card p  { font-size: 14px; color: var(--ink-2); line-height: 1.7; margin-bottom: 14px; }
+.vg-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vg-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.vg-list li:last-child { border-bottom: none; }
+.vg-list li::before {
+  content: '→';
+  color: var(--ink-4);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ─── SECTION: SAFETY ────────────────────────────────────────── */
+.safety-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+.safety-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 20px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.safety-card:hover { border-color: rgba(156,39,176,0.22); transform: translateY(-2px); }
+.safety-icon {
+  font-size: 22px;
+  margin-bottom: 12px;
+  display: block;
+}
+.safety-card h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.safety-card p  { font-size: 13px; color: var(--ink-3); line-height: 1.65; }
+
+/* ─── SECTION: QUICK START ───────────────────────────────────── */
+.start-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 40px;
+  align-items: start;
+}
+@media (max-width: 640px) { .start-steps { grid-template-columns: 1fr; } }
+.start-block { }
+.start-block h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.start-block h3 span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(156,39,176,0.18);
+  border: 1px solid rgba(156,39,176,0.3);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--purple-lt);
+}
+pre.start-code {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-2);
+  overflow-x: auto;
+}
+pre.start-code .sh-prompt { color: var(--ink-4); user-select: none; }
+pre.start-code .sh-cmd    { color: var(--ink); }
+pre.start-code .sh-comment{ color: var(--ink-4); font-style: italic; }
+.start-coming-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: rgba(200,153,58,0.1);
+  border: 1px solid rgba(200,153,58,0.25);
+  color: var(--gold);
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 36px 0;
+}
+.footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-4);
+  letter-spacing: 0.5px;
+}
+.footer-brand a { color: var(--ink-3); text-decoration: none; }
+.footer-brand a:hover { color: var(--ink); }
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+.footer-links a {
+  font-size: 12px;
+  color: var(--ink-4);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.footer-links a:hover { color: var(--ink-2); }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .section { padding: 60px 0; }
+  .hero { padding: 52px 0 40px; }
+  .agents-grid { grid-template-columns: 1fr 1fr; }
+  .node-model { display: none; }
+  .graph-wrap { overflow-x: auto; }
+  .graph-svg  { min-width: 560px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 400px) {
+  .agents-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── REDUCED MOTION ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  #progress { transition: none !important; }
+  .pulse-rd, .pulse-db, .pulse-bv, .pulse-vg, .pulse-gm { animation: none !important; opacity: 0; }
+  .glow-research, .glow-design, .glow-build, .glow-verify, .glow-gate, .glow-market { animation: none !important; opacity: 0; }
+  .node-gate { animation: none !important; fill: rgba(156,39,176,0.12); stroke: var(--purple); }
+  .gate-dot  { animation: none !important; fill: var(--purple); }
+  .gate-label { animation: none !important; fill: var(--purple-lt); }
+  .gate-sub-normal { animation: none !important; opacity: 1; }
+  .gate-sub-halt, .gate-sub-pass { animation: none !important; opacity: 0; }
+  .blink-live { animation: none !important; }
+  .graph-wrap::before { animation: none !important; }
+  .agent-card, .vg-card, .safety-card { transition: none !important; }
+}
+
+/* ─── FOCUS VISIBLE ──────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--purple-lt); outline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--purple-lt); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Reading progress -->
+<div id="progress" aria-hidden="true"></div>
+
+<!-- Skip to content -->
+<a href="#main" class="skip">Skip to content</a>
+
+<!-- ── NAV ──────────────────────────────────────────────────── -->
+<nav aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand" aria-label="Octopus v3 home">
+      <span class="nav-dots" aria-hidden="true">
+        <span class="nav-dot" style="background:var(--yellow)"></span>
+        <span class="nav-dot" style="background:var(--orange)"></span>
+        <span class="nav-dot" style="background:var(--blue)"></span>
+        <span class="nav-dot" style="background:var(--green)"></span>
+        <span class="nav-dot" style="background:var(--purple)"></span>
+      </span>
+      <span class="nav-wordmark">OCTOPUS</span>
+      <span class="nav-ver">v3</span>
+    </a>
+    <nav class="nav-links" aria-label="Page sections">
+      <a href="#agents">Agents</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#verify">Verify</a>
+      <a href="#safety">Safety</a>
+      <a href="#start">Start</a>
+    </nav>
+    <a href="https://github.com/victordelrosal/octopus" class="nav-cta" target="_blank" rel="noopener" aria-label="Star Octopus on GitHub">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<main id="main">
+
+<!-- ── HERO ─────────────────────────────────────────────────── -->
+<section class="hero" aria-label="Hero">
+  <div class="container">
+    <p class="eyebrow" aria-label="Product version and type">Octopus v3 &nbsp;&middot;&nbsp; Open Source &nbsp;&middot;&nbsp; Claude Code Plugin</p>
+    <h1>Orchestration is now<br>executed code.</h1>
+    <div class="rainbow-rule" aria-hidden="true"></div>
+    <p class="hero-sub">Five specialized agents. Schema-typed handoffs. Per-role model routing. A cold verifier that cannot be biased by the builder. A STOP-gate before any irreversible action ships.</p>
+
+    <div class="hero-ctas">
+      <a href="https://github.com/victordelrosal/octopus" class="btn-primary" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Star on GitHub
+      </a>
+      <a href="#workflow" class="btn-secondary">See the Workflow &darr;</a>
+    </div>
+
+    <!-- LIVE PIPELINE GRAPH -->
+    <div class="graph-wrap" role="img" aria-label="Animated sprint pipeline showing sequential flow: Research, Design, Build, Verify (cold independent context), STOP Gate, then Market. Research fans out to parallel Haiku workers, shown as a separate motif above the Research node.">
+      <svg class="graph-svg" viewBox="0 0 870 185" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <title>Octopus v3 sprint pipeline</title>
+        <defs>
+          <!-- Subtle vignette mask -->
+          <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
+            <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+            <stop offset="100%" stop-color="rgba(9,4,15,0.6)"/>
+          </radialGradient>
+        </defs>
+
+        <!-- ── TRACK LINES (persistent, dim) ── -->
+        <!-- R→D -->
+        <line x1="107" y1="96" x2="192" y2="96" class="track"/>
+        <!-- D→B -->
+        <line x1="248" y1="96" x2="357" y2="96" class="track"/>
+        <!-- B→V (sequential) -->
+        <line x1="410" y1="96" x2="528" y2="96" class="track"/>
+        <!-- V→Gate -->
+        <line x1="582" y1="96" x2="664" y2="96" class="track"/>
+        <!-- Gate→M -->
+        <line x1="720" y1="96" x2="793" y2="96" class="track"/>
+
+        <!-- ── PULSE PATHS (animated, sequential spine) ── -->
+        <line x1="107" y1="96" x2="192" y2="96" class="pulse pulse-rd"/>
+        <line x1="248" y1="96" x2="357" y2="96" class="pulse pulse-db"/>
+        <line x1="410" y1="96" x2="528" y2="96" class="pulse pulse-bv"/>
+        <line x1="582" y1="96" x2="664" y2="96" class="pulse pulse-vg"/>
+        <line x1="720" y1="96" x2="793" y2="96" class="pulse pulse-gm"/>
+
+        <!-- ── NODE GLOW RINGS ── -->
+        <circle cx="80"  cy="96" r="34" class="glow-ring glow-research"/>
+        <circle cx="220" cy="96" r="34" class="glow-ring glow-design"/>
+        <circle cx="383" cy="96" r="34" class="glow-ring glow-build"/>
+        <circle cx="555" cy="96" r="34" class="glow-ring glow-verify"/>
+        <circle cx="692" cy="96" r="38" class="glow-ring glow-gate"/>
+        <circle cx="820" cy="96" r="34" class="glow-ring glow-market"/>
+
+        <!-- ── FAN-OUT MOTIF: Research Haiku fan-out (separate from sequential sprint spine) ── -->
+        <g opacity="0.72">
+          <line x1="80" y1="68" x2="28" y2="43" stroke="rgba(255,193,7,0.2)" stroke-width="1" stroke-dasharray="3 4"/>
+          <line x1="80" y1="68" x2="80" y2="35" stroke="rgba(255,193,7,0.2)" stroke-width="1" stroke-dasharray="3 4"/>
+          <line x1="80" y1="68" x2="132" y2="43" stroke="rgba(255,193,7,0.2)" stroke-width="1" stroke-dasharray="3 4"/>
+          <circle cx="28"  cy="36" r="7" fill="#09040f" stroke="rgba(255,193,7,0.32)" stroke-width="1.5"/>
+          <circle cx="80"  cy="28" r="7" fill="#09040f" stroke="rgba(255,193,7,0.42)" stroke-width="1.5"/>
+          <circle cx="132" cy="36" r="7" fill="#09040f" stroke="rgba(255,193,7,0.32)" stroke-width="1.5"/>
+          <text x="28"  y="36" font-family="'JetBrains Mono',monospace" font-size="6" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="rgba(255,193,7,0.48)">H</text>
+          <text x="80"  y="28" font-family="'JetBrains Mono',monospace" font-size="6" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="rgba(255,193,7,0.58)">H</text>
+          <text x="132" y="36" font-family="'JetBrains Mono',monospace" font-size="6" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="rgba(255,193,7,0.48)">H</text>
+          <text x="80" y="14" font-family="'JetBrains Mono',monospace" font-size="7" font-weight="400" letter-spacing="1.5" text-anchor="middle" fill="rgba(255,193,7,0.28)">RESEARCH FAN-OUT</text>
+        </g>
+
+        <!-- ── NODE: RESEARCH (Yellow) ── -->
+        <circle cx="80"  cy="96" r="27" class="node-fill"/>
+        <circle cx="80"  cy="96" r="27" class="node-ring" stroke="var(--yellow)"/>
+        <circle cx="80"  cy="96" r="9"  class="node-dot-inner" fill="var(--yellow)"/>
+        <text x="80" y="136" class="node-label" fill="var(--yellow)">RESEARCH</text>
+        <text x="80" y="149" class="node-model">haiku-4.5</text>
+
+        <!-- ── NODE: DESIGN (Red-Orange) ── -->
+        <circle cx="220" cy="96" r="27" class="node-fill"/>
+        <circle cx="220" cy="96" r="27" class="node-ring" stroke="var(--orange)"/>
+        <circle cx="220" cy="96" r="9"  class="node-dot-inner" fill="var(--orange)"/>
+        <text x="220" y="136" class="node-label" fill="var(--orange)">DESIGN</text>
+        <text x="220" y="149" class="node-model">sonnet-4.6</text>
+
+        <!-- ── NODE: BUILD (Blue) ── -->
+        <circle cx="383" cy="96" r="27" class="node-fill"/>
+        <circle cx="383" cy="96" r="27" class="node-ring" stroke="var(--blue)"/>
+        <circle cx="383" cy="96" r="9"  class="node-dot-inner" fill="var(--blue)"/>
+        <text x="383" y="136" class="node-label" fill="var(--blue)">BUILD</text>
+        <text x="383" y="149" class="node-model">sonnet-4.6</text>
+
+        <!-- ── NODE: VERIFY (cold) ── -->
+        <circle cx="555" cy="96" r="27" class="node-fill"/>
+        <circle cx="555" cy="96" r="27" class="node-ring" stroke="var(--cold)"/>
+        <circle cx="555" cy="96" r="9"  class="node-dot-inner" fill="var(--cold)"/>
+        <text x="555" y="136" class="node-label" fill="var(--cold)">VERIFY</text>
+        <text x="555" y="149" class="node-model">cold · sonnet-4.6</text>
+
+        <!-- ── NODE: GATE (diamond, Purple) ── -->
+        <!-- GATE diamond: cx=692 cy=96 half=27 -->
+        <polygon points="692,69 719,96 692,123 665,96" class="node-gate"/>
+        <circle cx="692" cy="96" r="8" class="gate-dot"/>
+        <text x="692" y="141" class="node-label gate-label">GATE</text>
+        <!-- Animated sub-labels -->
+        <text x="692" y="153" class="node-model gate-sub-normal">STOP</text>
+        <text x="692" y="153" class="node-model gate-sub-halt">HALT</text>
+        <text x="692" y="153" class="node-model gate-sub-pass">PASS</text>
+
+        <!-- ── NODE: MARKET (Green) ── -->
+        <circle cx="820" cy="96" r="27" class="node-fill"/>
+        <circle cx="820" cy="96" r="27" class="node-ring" stroke="var(--green)"/>
+        <circle cx="820" cy="96" r="9"  class="node-dot-inner" fill="var(--green)"/>
+        <text x="820" y="136" class="node-label" fill="var(--green)">MARKET</text>
+        <text x="820" y="149" class="node-model">haiku-4.5</text>
+
+        <!-- Vignette overlay -->
+        <rect x="0" y="0" width="870" height="185" fill="url(#vignette)" pointer-events="none"/>
+      </svg>
+    </div>
+
+    <p style="margin-top:14px;font-size:12px;color:var(--ink-4);text-align:center;">
+      Workflow API is research-preview. Exact signatures are provisional pending GA.
+    </p>
+  </div>
+</section>
+
+<!-- ── SECTION: FIVE AGENTS ─────────────────────────────────── -->
+<section id="agents" class="section section-alt">
+  <div class="container">
+    <p class="eyebrow">Five agents</p>
+    <h2>Real boundaries,<br>not prose pleas.</h2>
+    <p class="section-sub">In v2, scope was a paragraph asking an agent to please not write code. In v3, if the Researcher lacks the Write tool, it cannot write code regardless of what any prompt says. Boundaries are architectural.</p>
+
+    <div class="agents-grid">
+
+      <div class="agent-card agent-color-y">
+        <div class="agent-role" style="color:var(--yellow)">Yellow &middot; Researcher</div>
+        <div class="agent-model-badge">claude-haiku-4-5 · fan-out</div>
+        <p class="agent-desc">Scout mode: discovers opportunities and synthesizes research. Evaluate mode: grades live products with a KILL / PIVOT / SCALE verdict and supporting evidence.</p>
+        <p class="agent-boundary">Tools: Read, WebSearch, WebFetch, Bash (read-only). MCP: read-only, no write connectors.</p>
+      </div>
+
+      <div class="agent-card agent-color-ro">
+        <div class="agent-role" style="color:var(--orange)">Red-Orange &middot; Designer</div>
+        <div class="agent-model-badge">claude-sonnet-4-6</div>
+        <p class="agent-desc">UX flows, system architecture, wireframes, and design specs. Translates research briefs into actionable blueprints the Maker can execute without ambiguity.</p>
+        <p class="agent-boundary">Tools: Read, Write, Edit. No MCP. Cannot deploy or publish.</p>
+      </div>
+
+      <div class="agent-card agent-color-b">
+        <div class="agent-role" style="color:var(--blue)">Blue &middot; Maker</div>
+        <div class="agent-model-badge">claude-sonnet-4-6 · worktree</div>
+        <p class="agent-desc">Code, tests, deployment. Works from specs; never redesigns without approval. Runs in git worktree isolation so in-progress builds cannot corrupt the main branch.</p>
+        <p class="agent-boundary">Tools: Read, Write, Edit, Bash, Glob, Grep. MCP: deploy-capable (Cloudflare, Stripe). Only role with this access.</p>
+      </div>
+
+      <div class="agent-card agent-color-g">
+        <div class="agent-role" style="color:var(--green)">Green &middot; Marketer</div>
+        <div class="agent-model-badge">claude-haiku-4-5 · variants</div>
+        <p class="agent-desc">Copywriting, campaigns, growth assets, email sequences. Drafts distribution at high volume and low cost. A human sends; the Marketer never publishes autonomously.</p>
+        <p class="agent-boundary">Tools: Read, Write. No MCP. No publish action. STOP-gated always.</p>
+      </div>
+
+      <div class="agent-card agent-color-p">
+        <div class="agent-role" style="color:var(--purple-lt)">Purple &middot; Manager</div>
+        <div class="agent-model-badge">claude-opus-4-8 · apex</div>
+        <p class="agent-desc">Decomposes tasks, dispatches agents, enforces quality gates, synthesizes outputs. Operates at the orchestration apex only. If Purple is writing code, something is wrong.</p>
+        <p class="agent-boundary">Tools: All (orchestration use only). MCP: read-only plus approvals. Delegates execution; never does specialist work itself.</p>
+      </div>
+
+    </div>
+
+    <div class="cost-callout">
+      <strong>Model routing cuts cost by ~75-80% vs running every stage at Opus.</strong>
+      Haiku at $1/$5 per MTok for high-volume fan-out (research sweeps, copy variants). Sonnet at $3/$15 for build and design. Opus at $5/$25 for orchestration apex and final synthesis only. One word per stage: <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;">model:</code>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION: ORCHESTRATION AS CODE ───────────────────────── -->
+<section id="workflow" class="section">
+  <div class="container">
+    <p class="eyebrow">Orchestration as code</p>
+    <h2>The sprint pipeline<br>in 40 lines.</h2>
+    <p class="section-sub">In v2, the sprint mode was a prose instruction that asked one Opus instance to roleplay coordination. In v3, it is an executed Workflow script with barrier semantics, schema validation, and deterministic sequencing. Intelligence stays in the leaf agents; orchestration moves out of the token stream.</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28c840"></span>
+        <span class="code-filename">v3/workflows/sprint.workflow.js</span>
+        <span class="code-preview-note">research-preview API</span>
+      </div>
+<pre class="code"><code><span class="t-cm">// Workflow API: research-preview. Signatures provisional pending GA.</span>
+<span class="t-kw">import</span> { <span class="t-fn">pipeline</span>, <span class="t-fn">agent</span>, <span class="t-fn">verify</span>, <span class="t-fn">gate</span> } <span class="t-kw">from</span> <span class="t-str">'@octopus/core'</span>;
+<span class="t-kw">import</span> { ResearchBrief, DesignSpec, BuildArtifact } <span class="t-kw">from</span> <span class="t-str">'@octopus/schemas'</span>;
+
+<span class="t-kw">export default</span> <span class="t-fn">pipeline</span>({
+  <span class="t-obj">name</span>: <span class="t-str">'sprint'</span>,
+
+  <span class="t-obj">stages</span>: [
+
+    <span class="t-fn">agent</span>({
+      <span class="t-obj">type</span>:   <span class="t-yr">'researcher'</span>,       <span class="t-cm">// Haiku fan-out: fast, cheap, wide</span>
+      <span class="t-obj">model</span>:  <span class="t-str">'claude-haiku-4-5'</span>,
+      <span class="t-obj">output</span>: ResearchBrief,    <span class="t-cm">// schema-validated handoff</span>
+    }),
+
+    <span class="t-fn">agent</span>({
+      <span class="t-obj">type</span>:   <span class="t-ro">'designer'</span>,
+      <span class="t-obj">model</span>:  <span class="t-str">'claude-sonnet-4-6'</span>,
+      <span class="t-obj">input</span>:  ResearchBrief,
+      <span class="t-obj">output</span>: DesignSpec,
+    }),
+
+    <span class="t-fn">agent</span>({
+      <span class="t-obj">type</span>:      <span class="t-bl">'maker'</span>,
+      <span class="t-obj">model</span>:     <span class="t-str">'claude-sonnet-4-6'</span>,
+      <span class="t-obj">isolation</span>: <span class="t-str">'worktree'</span>,       <span class="t-cm">// git-isolated working tree</span>
+      <span class="t-obj">input</span>:     DesignSpec,
+      <span class="t-obj">output</span>:    BuildArtifact,
+    }),
+
+    <span class="t-fn">verify</span>({
+      <span class="t-obj">cold</span>:     <span class="t-bool">true</span>,              <span class="t-cm">// fresh context: cannot see builder's reasoning</span>
+      <span class="t-obj">criteria</span>: <span class="t-str">'CRITERIA.md'</span>,    <span class="t-cm">// frozen binary tests, written before the run</span>
+      <span class="t-obj">on_fail</span>:  <span class="t-str">'halt'</span>,           <span class="t-cm">// pipeline stops; blocker list returned to builder</span>
+    }),
+
+    <span class="t-fn">gate</span>({
+      <span class="t-obj">blocks</span>: [<span class="t-str">'deploy'</span>, <span class="t-str">'publish'</span>, <span class="t-str">'send'</span>, <span class="t-str">'delete'</span>],
+      <span class="t-obj">writes</span>: <span class="t-str">'PENDING-APPROVALS.md'</span>,  <span class="t-cm">// parked; waits for human</span>
+    }),
+
+    <span class="t-fn">agent</span>({
+      <span class="t-obj">type</span>:  <span class="t-gr">'marketer'</span>,           <span class="t-cm">// Haiku: high-volume copy variants</span>
+      <span class="t-obj">model</span>: <span class="t-str">'claude-haiku-4-5'</span>,
+      <span class="t-obj">input</span>: BuildArtifact,
+    }),
+
+  ],
+});
+</code></pre>
+    </div>
+
+    <p class="code-caption">Each stage receives a schema-validated artifact from the previous stage. The <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">verify</code> stage spawns a cold agent with an independent context every round. The <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">gate</code> primitive halts and writes to <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">PENDING-APPROVALS.md</code> before any irreversible action. A skeptical engineer can audit every claim against a running script.</p>
+
+    <p style="margin-top:18px;font-size:13px;color:var(--ink-4);font-style:italic;">The orchestration adapter compiles this graph to native Workflow primitives when available, and degrades to the v2 prose-Manager path on platforms that do not yet have the Workflow tool (Codex CLI, Gemini CLI, pre-GA Claude Code). Zero config change required on upgrade.</p>
+  </div>
+</section>
+
+<!-- ── SECTION: VERIFY + GATE ────────────────────────────────── -->
+<section id="verify" class="section section-alt">
+  <div class="container">
+    <p class="eyebrow">Two load-bearing primitives</p>
+    <h2>It grades itself.</h2>
+    <p class="section-sub">The Workflow tool gives you <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;">pipeline()</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;">parallel()</code>. Octopus gives you <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;">verify</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:14px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;">gate</code>. Neither requires anything beyond the plugin. These are the differentiating layer: the Workflow tool gives you determinism; Octopus gives you trustworthiness.</p>
+
+    <div class="vg-grid">
+      <div class="vg-card">
+        <div class="vg-badge vg-badge-verify">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><circle cx="5" cy="5" r="4" stroke="var(--cold)" stroke-width="1.5"/><circle cx="5" cy="5" r="1.5" fill="var(--cold)"/></svg>
+          Cold Verify
+        </div>
+        <h3>Independent context, every round.</h3>
+        <p>Anthropic's own June 2026 loop experiments found a separate verifier beats self-critique. A builder's context is compromised by intent; Octopus does not ask the builder to grade its own work.</p>
+        <ul class="vg-list">
+          <li>Criteria are frozen at pipeline start with <code style="font-family:'JetBrains Mono',monospace;font-size:12px">octopus.criteria([...])</code>. Each criterion is binary: pass or fail, no partial credit.</li>
+          <li>A fresh cold agent is spawned per round. It sees only the frozen criteria and the artifact directory; never the builder's session, reasoning, or prior conversation.</li>
+          <li>Its system instruction: "Your job is to find failures. Approve only if every criterion passes without interpretation."</li>
+          <li>On failure, the pipeline halts and returns a blocker list. The next verify round is always a new cold agent, regardless of accumulated prior rounds.</li>
+          <li>Two non-disableable security checks run first: secret scan of all staged files, and <code style="font-family:'JetBrains Mono',monospace;font-size:12px">npm audit --audit-level=high</code> (or equivalent). Any hit is an automatic fail.</li>
+        </ul>
+      </div>
+
+      <div class="vg-card">
+        <div class="vg-badge vg-badge-gate">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M5 1L9 5L5 9L1 5Z" stroke="var(--purple-lt)" stroke-width="1.5"/></svg>
+          STOP Gate
+        </div>
+        <h3>Human in the loop, exactly once.</h3>
+        <p>Before any action that is irreversible, outward-facing, or involves real spend, the pipeline pauses. The decision stays parked until a human clears it. This cannot be bypassed by any agent instruction.</p>
+        <ul class="vg-list">
+          <li>Triggers on: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">deploy</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:12px">publish</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:12px">send</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:12px">delete</code>, and any purchase action.</li>
+          <li>The pending action is written verbatim to <code style="font-family:'JetBrains Mono',monospace;font-size:12px">PENDING-APPROVALS.md</code> with full context for the reviewer.</li>
+          <li>The Marketer role is permanently STOP-gated. It drafts distribution assets; it never sends, posts, or publishes autonomously.</li>
+          <li>Gate is composable: add custom trigger patterns to your <code style="font-family:'JetBrains Mono',monospace;font-size:12px">CRITERIA.md</code> to block domain-specific irreversible actions.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION: SAFETY ───────────────────────────────────────── -->
+<section id="safety" class="section">
+  <div class="container">
+    <p class="eyebrow">Safe by design</p>
+    <h2>Zero config collision.</h2>
+    <p class="section-sub">Octopus's rarest property since v1: it ships no hooks, no settings.json, no CLAUDE.md mutations. v3 preserves this guarantee explicitly while moving to a plugin architecture with materially larger capability.</p>
+
+    <div class="safety-grid">
+      <div class="safety-card">
+        <span class="safety-icon" aria-hidden="true" style="font-size:20px;color:var(--purple-lt)">&#9633;</span>
+        <h3>No global installation</h3>
+        <p>Installs under <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:1px 5px;border-radius:3px;">~/.claude/plugins/octopus/</code>. Never touches your CLAUDE.md, settings.json, or any other config path. Uninstall with one command; no residual side effects.</p>
+      </div>
+
+      <div class="safety-card">
+        <span class="safety-icon" aria-hidden="true" style="font-size:20px;color:var(--blue)">&#9633;</span>
+        <h3>Least privilege per role</h3>
+        <p>Researcher has read-only MCP; no write connectors. Maker is the only role with deploy-capable MCP (Cloudflare, Stripe). The Verifier gets nothing but Read. Privilege is not a prose plea; it is the tool allowlist.</p>
+      </div>
+
+      <div class="safety-card">
+        <span class="safety-icon" aria-hidden="true" style="font-size:20px;color:var(--green)">&#9633;</span>
+        <h3>No autonomous distribution</h3>
+        <p>The Marketer role drafts; a human sends. This is not a setting. It is a permanent STOP-gate on every outward-facing action from the Marketer. Auto-posting to social media or Product Hunt is blocked at the architecture level.</p>
+      </div>
+
+      <div class="safety-card">
+        <span class="safety-icon" aria-hidden="true" style="font-size:20px;color:var(--cold)">&#9633;</span>
+        <h3>Security pass in every verify gate</h3>
+        <p>Before any artifact can ship: a secret scan checks all staged files for tokens, API keys, and passwords. A dependency audit runs at high severity. Both checks are non-disableable by user criteria and cannot be overridden by any agent prompt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION: QUICK START ──────────────────────────────────── -->
+<section id="start" class="section section-alt">
+  <div class="container">
+    <p class="eyebrow">Quick start</p>
+    <h2>Try it today.</h2>
+    <p class="section-sub">The v2 prose-Manager mode is available now. The v3 plugin and Workflow adapter are in active development. Star the repo to follow progress.</p>
+
+    <div class="start-steps">
+      <div class="start-block">
+        <h3><span>1</span> Try v2 today (stable)</h3>
+<pre class="start-code"><span class="sh-comment"># Clone and install into your project</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">git clone https://github.com/victordelrosal/octopus</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">cp octopus/octopus.md ./CLAUDE.md</span>
+
+<span class="sh-comment"># Start Claude Code in your project</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">claude</span>
+
+<span class="sh-comment"># Then at the prompt:</span>
+<span class="sh-prompt">&gt; </span><span class="sh-cmd">sprint build a micro-tool that...</span></pre>
+      </div>
+
+      <div class="start-block">
+        <div class="start-coming-badge">Coming: v3 Plugin</div>
+        <h3><span>2</span> v3 plugin install (in development)</h3>
+<pre class="start-code"><span class="sh-comment"># One-line install (pending plugin system GA)</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">claude plugin install octopus</span>
+
+<span class="sh-comment"># Or from source (v3 branch)</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">bash octopus/v3/install.sh</span>
+
+<span class="sh-comment"># Uninstall with zero residue</span>
+<span class="sh-prompt">$ </span><span class="sh-cmd">claude plugin remove octopus</span></pre>
+        <p style="margin-top:12px;font-size:12.5px;color:var(--ink-4);line-height:1.6;">Plugin architecture requires the Claude Code plugin system to reach GA. The Workflow adapter and per-role tool boundaries are designed and ready; watch the repo for the v3.0.0 release tag.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:36px;padding:20px 22px;background:rgba(156,39,176,0.06);border:1px solid rgba(156,39,176,0.15);border-radius:10px;">
+      <p style="font-size:14px;color:var(--ink-2);line-height:1.7;">
+        <strong style="color:var(--purple-lt)">What is already in the repo:</strong> the five-agent prompt system, the venture metaskill (hunt/harvest pipeline), the pixel-agent VS Code visualizer, autonomous sprint shell scripts, and the full v3 architecture document. The repo is the reference; the landing page summarises design intent. Read <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;">v3/ARCHITECTURE.md</code> for the full technical spec.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ── FOOTER ────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      Octopus v3 &nbsp;&middot;&nbsp; Open Source (MIT) &nbsp;&middot;&nbsp; June 2026<br>
+      <span style="margin-top:4px;display:block;">By <a href="https://github.com/victordelrosal" target="_blank" rel="noopener">Victor del Rosal</a> / <a href="https://fiveinnolabs.com" target="_blank" rel="noopener">fiveinnolabs</a></span>
+    </div>
+    <nav class="footer-links" aria-label="Footer links">
+      <a href="https://github.com/victordelrosal/octopus" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/victordelrosal/octopus/blob/main/v3/ARCHITECTURE.md" target="_blank" rel="noopener">Architecture</a>
+      <a href="https://github.com/victordelrosal/octopus/issues" target="_blank" rel="noopener">Issues</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- ── SCRIPT ────────────────────────────────────────────────── -->
+<script>
+// ── GitHub URL (edit in one place) ──
+const REPO = 'https://github.com/victordelrosal/octopus';
+
+// ── Patch all GitHub href placeholders ──
+document.querySelectorAll('a[href*="github.com/victordelrosal/octopus"]').forEach(function(el) {
+  // Already correct; no-op. If you change REPO above, uncomment this swap:
+  // el.href = el.href.replace('https://github.com/victordelrosal/octopus', REPO);
+});
+
+// ── Reading progress bar ──
+var bar = document.getElementById('progress');
+function updateProgress() {
+  var doc = document.documentElement;
+  var scrollTop = window.scrollY || doc.scrollTop;
+  var scrollHeight = doc.scrollHeight - doc.clientHeight;
+  var pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  bar.style.width = Math.min(pct, 100).toFixed(1) + '%';
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ── Smooth scroll for nav links ──
+document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    var target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ── Keyboard: T focuses first CTA, Escape blurs ──
+document.addEventListener('keydown', function(e) {
+  if (e.target && e.target.matches && e.target.matches('input, textarea, [contenteditable]')) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === 'Escape') { document.activeElement && document.activeElement.blur(); }
+});
+</script>
+</body>
+</html>
