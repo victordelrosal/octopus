@@ -1,2 +1,5 @@
 .DS_Store
 **/.DS_Store
+
+# crank render verification artifacts
+.crank/*.png
