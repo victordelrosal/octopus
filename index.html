@@ -1012,6 +1012,135 @@ footer {
    FOCUS
    ==================================================== */
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+
+/* ====================================================
+   NAV MASCOT
+   ==================================================== */
+.nav-mascot {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: transform 0.18s ease;
+}
+.nav-brand:hover .nav-mascot { transform: scale(1.05); }
+
+/* ====================================================
+   HERITAGE BAND
+   ==================================================== */
+.heritage {
+  padding: 96px 0 104px;
+  background: var(--base);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.heritage-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.heritage-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 40px;
+}
+.heritage-img {
+  display: block;
+  max-width: 540px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 48px;
+  filter: drop-shadow(0 0 32px rgba(168,107,255,0.22)) drop-shadow(0 0 8px rgba(74,158,255,0.14));
+  border-radius: 4px;
+}
+
+/* ASCII art wrapper: CRT scanlines via ::after overlay */
+.heritage-ascii-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 28px;
+}
+.heritage-ascii-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 3px
+  );
+  pointer-events: none;
+  opacity: 0.65;
+  border-radius: 2px;
+}
+
+.heritage-ascii {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(6.5px, 1.9vw, 13.5px);
+  line-height: 1.42;
+  letter-spacing: clamp(0px, 0.05em, 0.05em);
+  white-space: pre;
+  display: block;
+  padding: 4px 0;
+  /* Phosphor glow: gentle CRT readout feel */
+  text-shadow:
+    0 0 6px currentColor,
+    0 0 12px rgba(255,255,255,0.08);
+}
+@media (max-width: 520px) {
+  .heritage-ascii {
+    font-size: clamp(5px, 3.2vw, 8px);
+    letter-spacing: 0;
+  }
+}
+
+.heritage-ascii-line-y { color: var(--yellow); }
+.heritage-ascii-line-o { color: var(--orange); }
+.heritage-ascii-line-b { color: var(--blue); }
+.heritage-ascii-line-g { color: var(--green); }
+.heritage-ascii-line-p { color: var(--purple); }
+
+.heritage-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 1.2px;
+  margin-top: 4px;
+}
+
+/* One-time wipe-in reveal for the ASCII block.
+   Visible by default; animation added only under js-motion. */
+@keyframes heritage-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0); }
+}
+/* Visible by default; the wipe only plays when .wipe-in is added by the observer,
+   so a failed/absent observer can never trap the ASCII hidden. */
+html.js-motion .heritage-ascii-wrap.wipe-in {
+  animation: heritage-wipe 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Reduced motion: show everything statically */
+@media (prefers-reduced-motion: reduce) {
+  .heritage-ascii-wrap { clip-path: none !important; animation: none !important; }
+  .heritage-img { filter: none; }
+}
 </style>
 </head>
 <body>
@@ -1023,6 +1152,7 @@ footer {
 <nav class="site-nav" aria-label="Main navigation">
   <div class="nav-inner">
     <a href="#" class="nav-brand" aria-label="Octopus v3 home">
+      <img src="img/favicon.png" alt="Octopus" class="nav-mascot" width="26" height="26" loading="eager">
       <span class="nav-wordmark">Octopus</span>
       <span class="nav-ver">v3</span>
     </a>
@@ -1127,6 +1257,34 @@ footer {
     <p class="hero-note">Workflow API is research-preview. Signatures are provisional pending GA.</p>
   </div>
 
+</section>
+
+
+<!-- ===== HERITAGE BAND =================================== -->
+<section id="heritage" class="heritage" aria-label="Octopus heritage">
+  <div class="heritage-inner">
+
+    <p class="heritage-eyebrow">Five agents. One orchestrator.</p>
+
+    <img
+      src="img/octopus.png"
+      alt="Octopus: five agents, one orchestrator"
+      class="heritage-img"
+      loading="lazy"
+      width="540"
+    >
+
+    <div class="heritage-ascii-wrap" aria-label="OCTOPUS">
+      <pre class="heritage-ascii" role="img" aria-label="OCTOPUS logo in ASCII art"><span class="heritage-ascii-line-y"> ████   ████  ██████  ████  █████  ██  ██ ██████</span>
+<span class="heritage-ascii-line-o">██  ██ ██       ██   ██  ██ ██  ██ ██  ██ ██    </span>
+<span class="heritage-ascii-line-b">██  ██ ██       ██   ██  ██ █████  ██  ██ ██████</span>
+<span class="heritage-ascii-line-g">██  ██ ██       ██   ██  ██ ██     ██  ██     ██</span>
+<span class="heritage-ascii-line-p"> ████   ████    ██    ████  ██      ████  ██████</span></pre>
+    </div>
+
+    <p class="heritage-caption">Since 2026. Research, design, build, market, evaluate.</p>
+
+  </div>
 </section>
 
 
@@ -1466,6 +1624,20 @@ function setupReveal() {
     });
   }, { threshold: 0.10, rootMargin: '0px 0px -40px 0px' });
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  /* Heritage ASCII wipe-in: one-shot when the block enters the viewport */
+  const asciiWrap = document.querySelector('.heritage-ascii-wrap');
+  if (asciiWrap) {
+    const wipeObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          asciiWrap.classList.add('wipe-in');
+          wipeObs.unobserve(asciiWrap);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -20px 0px' });
+    wipeObs.observe(asciiWrap);
+  }
 }
 
 /* ======================================================
